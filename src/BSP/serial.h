@@ -24,9 +24,9 @@ namespace BSP {
 
             bool configurePort(size_t t_port_index, size_t t_baud_index);
 
-            bool readPort(std::vector<char>& buf);
+            bool readPort(std::vector<char>& buf) const;
 
-            bool isPortConnected();
+            bool isPortConnected() const;
 
             std::vector<std::string>& getSerialPorts(bool refresh = false);
     };

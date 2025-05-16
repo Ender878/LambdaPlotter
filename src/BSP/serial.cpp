@@ -118,7 +118,7 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
     return true;
 }
 
-bool BSP::Serial::readPort(std::vector<char>& buf) {
+bool BSP::Serial::readPort(std::vector<char>& buf) const {
     buf.resize(1024);
 
     if (!isPortConnected()) {
@@ -137,7 +137,7 @@ bool BSP::Serial::readPort(std::vector<char>& buf) {
     return true;
 }
 
-bool BSP::Serial::isPortConnected() {
+bool BSP::Serial::isPortConnected() const {
     termios tty;
 
     // read config to see if the port is still there
