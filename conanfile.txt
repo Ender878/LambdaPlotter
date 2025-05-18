@@ -2,6 +2,7 @@
 imgui/1.91.8
 glfw/3.4
 glew/2.2.0
+gtest/1.16.0
 
 [tool_requires]
 imgui/1.91.8

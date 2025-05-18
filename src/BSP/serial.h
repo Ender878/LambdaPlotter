@@ -7,9 +7,13 @@
 #include <vector>
 
 namespace BSP {
+    typedef struct baud_rate_t {
+        const char* str;
+        const int   value;
+    } baud_rate_t;
 
-    const int baud_rates[] = {B300, B600, B1200, B1800, B2400, B4800, B9600, B19200, B38400, B57600, B115200 };
-    constexpr size_t baud_rates_size = sizeof(baud_rates) / sizeof(*baud_rates);
+    extern const baud_rate_t baud_rates[];
+    extern const size_t baud_rates_size;
 
     class Serial {
         private:
@@ -24,9 +28,11 @@ namespace BSP {
 
             bool configurePort(size_t t_port_index, size_t t_baud_index);
 
-            bool readPort(std::vector<char>& buf) const;
+            bool read(std::vector<char>& buf) const;
 
             bool isPortConnected() const;
+
+            void close();
 
             std::vector<std::string>& getSerialPorts(bool refresh = false);
     };

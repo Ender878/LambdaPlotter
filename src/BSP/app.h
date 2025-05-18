@@ -2,6 +2,8 @@
 #define __APP_H__
 
 #include "../bindings/imgui_impl_glfw.h"
+#include "serial.h"
+#include <atomic>
 #include <functional>
 #include <imgui.h>
 #include <optional>
@@ -24,7 +26,7 @@ namespace BSP {
 
             static bool renderMainWindow(std::function<void()> content);
 
-            static void renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const char** b_rates, size_t& current_rate, bool& open, bool should_read, bool& refresh_ports);
+            static void renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const baud_rate_t* b_rates, size_t& current_rate, bool& open, bool should_read, std::atomic<bool>& refresh_ports);
 
             static void renderPlot();
 

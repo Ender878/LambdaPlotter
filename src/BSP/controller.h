@@ -6,11 +6,8 @@
 #include <optional>
 
 namespace BSP {
-    extern const char* baud_rates_str[];
-
     class Controller {
         private:
-            // boolean flags used to read the state of the view's components.
             // `combobox_port_index` and `combobox_baud_index` store the index of the selected option
             static std::optional<size_t> combobox_port_index;
             static size_t combobox_baud_index;
@@ -20,9 +17,10 @@ namespace BSP {
             // wether the list of available ports should be refreshed.
             static bool button_status;
             static std::atomic<bool> should_read;
-            static bool refresh_ports;
+            static std::atomic<bool> refresh_ports;
+            static std::string current_port;
 
-            static void startSerialReading(const Serial& s);
+            static void startSerialReading(Serial& s);
         public:
             static void update(Serial& serial);
     };

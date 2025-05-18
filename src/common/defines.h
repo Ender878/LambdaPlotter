@@ -6,4 +6,6 @@
 
 #define THREAD_READ_DELAY 5 // ms
 
+#define DEFAULT_BUF_SIZE 1024
+
 #endif

@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+enable_testing()
+
 find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glew REQUIRED)
@@ -27,3 +29,10 @@ add_executable(better_serial_monitor
 )
 
 target_link_libraries(better_serial_monitor imgui::imgui glfw GLEW::GLEW)
+
+find_package(GTest REQUIRED)
+
+add_executable(bsp_test tests/bsp_tests.cpp)
+target_link_libraries(bsp_test gtest)
+
+add_test(NAME BSP_Test COMMAND bsp_test)

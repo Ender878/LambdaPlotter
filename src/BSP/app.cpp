@@ -79,9 +79,9 @@ bool BSP::Window::renderMainWindow(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const char** b_rates, size_t& current_rate, bool& open, bool should_read, bool& refresh_ports) {
+void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const baud_rate_t* b_rates, size_t& current_rate, bool& open, bool should_read, std::atomic<bool>& refresh_ports) {
     const char* port = current_port.has_value() && current_port <= serial_ports.size() ? serial_ports[current_port.value()].c_str() : "";
-    const char* baud = b_rates[current_rate];
+    const char* baud = b_rates[current_rate].str;
 
     ImGui::PushItemWidth(m_width / 3.0);
 
@@ -110,7 +110,7 @@ void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, st
         for (size_t i = 0; i < BSP::baud_rates_size; i++) {
             bool selected = current_rate == i;
 
-            if (ImGui::Selectable(b_rates[i], selected)) {
+            if (ImGui::Selectable(b_rates[i].str, selected)) {
                 current_rate = i;
                 ImGui::SetItemDefaultFocus();
             }

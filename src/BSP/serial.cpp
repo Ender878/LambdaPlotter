@@ -1,4 +1,5 @@
 #include "serial.h"
+#include "../common/defines.h"
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
@@ -16,7 +17,7 @@ BSP::Serial::Serial() {
 }
 
 BSP::Serial::~Serial() {
-    close(serial_port);
+    ::close(serial_port);
 }
 
 std::vector<std::string>& BSP::Serial::getSerialPorts(bool refresh) {
@@ -49,7 +50,7 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
 
     // if a serial port is already open, close it 
     if (serial_port >= 0) {
-        close(serial_port);
+        ::close(serial_port);
     }
 
     // get port file descriptor
@@ -107,7 +108,7 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
     tty.c_cc[VMIN]  = 0; // return immediately if no data is available
 
     // set baud rate
-    cfsetspeed(&tty, baud_rates[t_baud_index]);
+    cfsetspeed(&tty, baud_rates[t_baud_index].value);
 
     // save tty settings
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
@@ -118,21 +119,20 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
     return true;
 }
 
-bool BSP::Serial::readPort(std::vector<char>& buf) const {
-    buf.resize(1024);
+bool BSP::Serial::read(std::vector<char>& buf) const {
+    buf.resize(DEFAULT_BUF_SIZE);
 
     if (!isPortConnected()) {
         return false;
     }
 
-    int n = read(serial_port, buf.data(), buf.size());
+    int n = ::read(serial_port, buf.data(), buf.size());
 
     if (n < 0) {
         return false;
     }
 
     buf.resize(n);
-    //buf.push_back('\0');
 
     return true;
 }
@@ -144,6 +144,26 @@ bool BSP::Serial::isPortConnected() const {
     return tcgetattr(serial_port, &tty) == 0;
 }
 
+void BSP::Serial::close() {
+    ::close(serial_port);
+}
+
 namespace BSP {
+    const baud_rate_t baud_rates[] = {
+        {"300",     B300},
+        {"600",     B600},
+        {"1200",    B1200},
+        {"1800",    B1800},
+        {"2400",    B2400},
+        {"4800",    B4800},
+        {"9600",    B9600},
+        {"19200",   B19200},
+        {"38400",   B38400},
+        {"57600",   B57600},
+        {"115200", B115200}
+    };
+
+    constexpr size_t baud_rates_size = sizeof(baud_rates) / sizeof(*baud_rates);
+
     Serial serial;
 }
