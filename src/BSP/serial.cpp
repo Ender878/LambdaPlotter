@@ -105,7 +105,7 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
     tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); // Disable any special handling of received bytes
 
     tty.c_cc[VTIME] = 1; // timeout of 1 decisecond
-    tty.c_cc[VMIN]  = 0; // return immediately if no data is available
+    tty.c_cc[VMIN]  = 1; // return immediately if no data is available
 
     // set baud rate
     cfsetspeed(&tty, baud_rates[t_baud_index].value);

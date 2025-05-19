@@ -4,6 +4,7 @@
 #include "../bindings/imgui_impl_glfw.h"
 #include "serial.h"
 #include <atomic>
+#include <deque>
 #include <functional>
 #include <imgui.h>
 #include <optional>
@@ -28,7 +29,7 @@ namespace BSP {
 
             static void renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const baud_rate_t* b_rates, size_t& current_rate, bool& open, bool should_read, std::atomic<bool>& refresh_ports);
 
-            static void renderPlot();
+            static void renderPlot(const std::deque<double>& data);
 
             static void destroy();
 

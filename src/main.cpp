@@ -12,8 +12,6 @@ int main(int, char **) {
 
         while (BSP::Window::renderMainWindow([]() -> void {
             BSP::Controller::update(BSP::serial);
-
-            BSP::Window::renderPlot();
         }));
 
         BSP::Window::destroy();

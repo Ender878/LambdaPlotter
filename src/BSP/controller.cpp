@@ -5,18 +5,24 @@
 #include <algorithm>
 #include <chrono>
 
+#include <cstdio>
+#include <deque>
+#include <exception>
 #include <iterator>
 #include <optional>
 #include <print>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <vector>
- 
+
 std::optional<size_t> BSP::Controller::combobox_port_index(std::nullopt);
 size_t BSP::Controller::combobox_baud_index = 0;
 bool BSP::Controller::button_status = false;
 std::atomic<bool> BSP::Controller::should_read(false);
 std::atomic<bool> BSP::Controller::refresh_ports(false);
 std::string BSP::Controller::current_port("");
+std::deque<double> BSP::Controller::plot_data_list;
 
 void BSP::Controller::update(Serial& serial) {
     std::vector<std::string>& serial_ports = serial.getSerialPorts(refresh_ports);
@@ -58,6 +64,7 @@ void BSP::Controller::update(Serial& serial) {
         }
     }
 
+    BSP::Window::renderPlot(plot_data_list);
 }
 
 void BSP::Controller::startSerialReading(Serial& s) {
@@ -69,7 +76,8 @@ void BSP::Controller::startSerialReading(Serial& s) {
             std::vector<char> buf;
 
             if (s.read(buf)) {
-                std::print("{}", buf.data());
+                //std::print("{}", buf.data());
+                processData(buf);
             } else {
                 // if the device get disconnected or we can't read, stop reading and refresh the port list
                 s.close();
@@ -81,4 +89,50 @@ void BSP::Controller::startSerialReading(Serial& s) {
         }
 
     }).detach();
+}
+
+// TODO: implement multiple data plotting & implement plot clearing
+void BSP::Controller::processData(std::vector<char> buffer) {
+    std::vector<double> buf_data_stream;                // vector storing plot data read from the buffer
+    static std::string incomplete_data_chunk = "";      // static string storing incomplete buffer data chunks (chunks missing the final \n)
+    std::string plot_data = "";                         // filtered data chunks to be processed and plotted
+
+    buffer.push_back('\0');
+
+    std::string buf_str = buffer.data();
+
+    // iter every character received from the buffer and for every '\n' encountered,
+    // add all the characters before it to the `plot_data` string, which will be processed
+    // and casted to be ready to be plotted.
+    for (const auto& c : buf_str) {
+        incomplete_data_chunk += c;
+
+        if (c == '\n') {
+            plot_data += incomplete_data_chunk;
+            incomplete_data_chunk = "";
+        }
+    }
+
+    if (!plot_data.empty()) {
+        std::stringstream str_stream(plot_data);
+        std::string data_fragment;
+    
+        while (std::getline(str_stream, data_fragment, '\n')) {
+            try {
+                std::println("{}", data_fragment);
+                buf_data_stream.push_back(std::stod(data_fragment));
+            } catch (const std::exception& e) {
+                std::println(stderr, "Error while processing plot data: {}", e.what());
+            }
+        }
+    
+        // append new data to the plot buffer
+        for (const auto& val : buf_data_stream) {
+            plot_data_list.push_back(val);
+    
+            if (plot_data_list.size() > MAX_PLOT_DATA) {
+                plot_data_list.pop_front();
+            }
+        }
+    }
 }

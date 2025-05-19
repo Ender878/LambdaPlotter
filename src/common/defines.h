@@ -8,4 +8,6 @@
 
 #define DEFAULT_BUF_SIZE 1024
 
+#define MAX_PLOT_DATA 1024
+
 #endif

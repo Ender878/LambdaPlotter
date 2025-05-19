@@ -3,10 +3,10 @@
 #include "../implot/implot.h"
 #include "serial.h"
 #include <GLFW/glfw3.h>
-#include <cstddef>
 #include <imgui.h>
 #include <print>
 #include <stdexcept>
+#include <vector>
 
 GLFWwindow* BSP::Window::window = nullptr;
 ImGuiIO* BSP::Window::io = nullptr;
@@ -140,10 +140,20 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-void BSP::Window::renderPlot() {
-    ImPlot::BeginPlot("plot");
+void BSP::Window::renderPlot(const std::deque<double>& data) {
+    if (ImPlot::BeginPlot("plot")) {
+        if (data.empty()) {
+            ImPlot::EndPlot();
 
-    ImPlot::EndPlot();
+            return;
+        }
+
+        std::vector<double> data_vec(data.begin(), data.end());
+
+        ImPlot::PlotLine("##plot", data_vec.data(), data.size());
+
+        ImPlot::EndPlot();
+    }
 }
 
 ImVec2 BSP::Window::getWindowSize() {

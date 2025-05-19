@@ -3,7 +3,9 @@
 
 #include "serial.h"
 #include <atomic>
+#include <deque>
 #include <optional>
+#include <vector>
 
 namespace BSP {
     class Controller {
@@ -20,7 +22,11 @@ namespace BSP {
             static std::atomic<bool> refresh_ports;
             static std::string current_port;
 
+            // data structure containing the current plot data
+            static std::deque<double> plot_data_list;
+
             static void startSerialReading(Serial& s);
+            static void processData(std::vector<char> buffer);
         public:
             static void update(Serial& serial);
     };

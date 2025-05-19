@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.20.0)
 project(better_serial_monitor VERSION 0.1.0 LANGUAGES C CXX)
 
-if(EXISTS ${CMAKE_BINARY_DIR}/build/Release/generators/conan_toolchain.cmake)
-    include(${CMAKE_BINARY_DIR}/build/Release/generators/conan_toolchain.cmake)
-endif()
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
