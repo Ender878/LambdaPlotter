@@ -5,7 +5,7 @@
 #include <exception>
 #include <print>
 
-int main(int, char **) {
+int main(void) {
 
     try {
         BSP::Window::init(WIN_WIDTH, WIN_HEIGHT, "Better Serial Plotter");

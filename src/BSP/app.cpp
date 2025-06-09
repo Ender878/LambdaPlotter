@@ -1,16 +1,21 @@
 #include "app.h"
+#include "../common/defines.h"
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
 #include "serial.h"
 #include <GLFW/glfw3.h>
+#include <algorithm>
+#include <deque>
 #include <imgui.h>
+#include <mutex>
 #include <print>
 #include <stdexcept>
 #include <vector>
 
 GLFWwindow* BSP::Window::window = nullptr;
 ImGuiIO* BSP::Window::io = nullptr;
-ImGuiStyle* BSP::Window::style = nullptr;
+ImGuiStyle* BSP::Window::imgui_style = nullptr;
+ImPlotStyle* BSP::Window::implot_style = nullptr;
 int BSP::Window::m_width = 0;
 int BSP::Window::m_height = 0;
 
@@ -42,7 +47,8 @@ void BSP::Window::init(int t_width, int t_height, const char* title) {
     ImPlot::CreateContext();
 
     io = &ImGui::GetIO();
-    style = &ImGui::GetStyle();
+    imgui_style = &ImGui::GetStyle();
+    implot_style = &ImPlot::GetStyle();
 
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
@@ -127,7 +133,7 @@ void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, st
 
     ImGui::SameLine();
 
-    refresh_ports = ImGui::Button("Refresh");
+    refresh_ports.store(ImGui::Button("Refresh"));
 } 
 
 void BSP::Window::destroy() {
@@ -140,20 +146,40 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-void BSP::Window::renderPlot(const std::deque<double>& data) {
-    if (ImPlot::BeginPlot("plot")) {
-        if (data.empty()) {
-            ImPlot::EndPlot();
+void BSP::Window::renderPlot(const std::deque<double>& data, const std::deque<long>& timestamps) {
+    if (!data.empty()) {
+        std::deque<double> local_data;
+        std::deque<long> local_timestamps;
 
-            return;
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+
+            local_data = data;
+            local_timestamps = timestamps;
         }
 
-        std::vector<double> data_vec(data.begin(), data.end());
+        double data_max = *std::max_element(local_data.begin(), local_data.end());
+        double data_min = *std::min_element(local_data.begin(), local_data.end());
 
-        ImPlot::PlotLine("##plot", data_vec.data(), data.size());
+        ImPlot::SetNextAxesLimits(local_timestamps.front(), local_timestamps.back(), data_min - 10, data_max + 10, ImPlotCond_Always);
 
+        if (ImPlot::BeginPlot("##plot_win")) {
+                ImPlot::SetupAxes("Time", "Data");
+
+                ImPlot::SetupAxisFormat(ImAxis_X1, "%.0f ms");
+
+                std::vector<double> data_vec(local_data.begin(), local_data.end());
+                std::vector<double> timestamps_vec(local_timestamps.begin(), local_timestamps.end());
+    
+                ImPlot::PlotLine("##plot", timestamps_vec.data(), data_vec.data(), local_timestamps.size());
+    
+            ImPlot::EndPlot();
+        }
+    } else {
+        ImPlot::BeginPlot("##plot_win");
         ImPlot::EndPlot();
     }
+
 }
 
 ImVec2 BSP::Window::getWindowSize() {

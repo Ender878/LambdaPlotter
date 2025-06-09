@@ -5,11 +5,13 @@
 #include <atomic>
 #include <deque>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace BSP {
     class Controller {
         private:
+
             // `combobox_port_index` and `combobox_baud_index` store the index of the selected option
             static std::optional<size_t> combobox_port_index;
             static size_t combobox_baud_index;
@@ -24,9 +26,19 @@ namespace BSP {
 
             // data structure containing the current plot data
             static std::deque<double> plot_data_list;
+            static std::deque<long> plot_timestamps;
+            static long plot_begin_time;
+
+            // variable used to keep track of the last opened ports
+            static std::string last_open_port;
+            static std::string prev_open_port;
+            
+            // string storing incomplete buffer data chunks (chunks missing the final '\n')
+            static std::string incomplete_data_chunk;
 
             static void startSerialReading(Serial& s);
             static void processData(std::vector<char> buffer);
+            static void clearPlotData();
         public:
             static void update(Serial& serial);
     };

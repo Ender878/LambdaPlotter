@@ -2,6 +2,7 @@
 #include "../common/defines.h"
 #include "app.h"
 #include "serial.h"
+#include "telemetry.h"
 #include <algorithm>
 #include <chrono>
 
@@ -9,6 +10,7 @@
 #include <deque>
 #include <exception>
 #include <iterator>
+#include <mutex>
 #include <optional>
 #include <print>
 #include <sstream>
@@ -23,11 +25,17 @@ std::atomic<bool> BSP::Controller::should_read(false);
 std::atomic<bool> BSP::Controller::refresh_ports(false);
 std::string BSP::Controller::current_port("");
 std::deque<double> BSP::Controller::plot_data_list;
+std::deque<long> BSP::Controller::plot_timestamps;
+long BSP::Controller::plot_begin_time = 0;
+
+std::string BSP::Controller::last_open_port = "";
+std::string BSP::Controller::prev_open_port = "";
+std::string BSP::Controller::incomplete_data_chunk = "";      // static string storing incomplete buffer data chunks (chunks missing the final \n)
 
 void BSP::Controller::update(Serial& serial) {
-    std::vector<std::string>& serial_ports = serial.getSerialPorts(refresh_ports);
+    std::vector<std::string>& serial_ports = serial.getSerialPorts(refresh_ports.load());
 
-    if (refresh_ports) {
+    if (refresh_ports.load()) {
         
         // if the port list is empty, but the list index has a value, set the index to null
         if (serial_ports.empty() && combobox_port_index.has_value()) {
@@ -53,22 +61,37 @@ void BSP::Controller::update(Serial& serial) {
     if (button_status) {
         // if we are not already reading and there is a port selected, start reading.
         // If we are reading and the button has been pressed, stop reading.
-        if (combobox_port_index.has_value() && !should_read) {                        
+        if (combobox_port_index.has_value() && !should_read.load()) {                        
             std::println("Opening port {} with baud rate {}", current_port, BSP::baud_rates[combobox_baud_index].str);
+            last_open_port = current_port;
+            incomplete_data_chunk = "";
 
             serial.configurePort(combobox_port_index.value(), combobox_baud_index);
 
             startSerialReading(serial);
-        } else if (should_read) {
-            should_read = false;
+        } else if (should_read.load()) {
+            serial.close();
+            should_read.store(false);
+
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+
+                prev_open_port = last_open_port;
+                incomplete_data_chunk = "";
+            }
         }
     }
 
-    BSP::Window::renderPlot(plot_data_list);
+    BSP::Window::renderPlot(plot_data_list, plot_timestamps);
 }
 
 void BSP::Controller::startSerialReading(Serial& s) {
     should_read = true;
+
+    if (last_open_port != prev_open_port) {
+        clearPlotData();
+        plot_begin_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    }
 
     std::thread([&s]() {
 
@@ -81,8 +104,15 @@ void BSP::Controller::startSerialReading(Serial& s) {
             } else {
                 // if the device get disconnected or we can't read, stop reading and refresh the port list
                 s.close();
-                should_read = false;
-                refresh_ports = true;
+                should_read.store(false);
+                refresh_ports.store(true);
+                
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+
+                    prev_open_port = "";
+                    incomplete_data_chunk = "";
+                }
             }
  
             std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_READ_DELAY));
@@ -94,7 +124,6 @@ void BSP::Controller::startSerialReading(Serial& s) {
 // TODO: implement multiple data plotting & implement plot clearing
 void BSP::Controller::processData(std::vector<char> buffer) {
     std::vector<double> buf_data_stream;                // vector storing plot data read from the buffer
-    static std::string incomplete_data_chunk = "";      // static string storing incomplete buffer data chunks (chunks missing the final \n)
     std::string plot_data = "";                         // filtered data chunks to be processed and plotted
 
     buffer.push_back('\0');
@@ -119,20 +148,34 @@ void BSP::Controller::processData(std::vector<char> buffer) {
     
         while (std::getline(str_stream, data_fragment, '\n')) {
             try {
-                std::println("{}", data_fragment);
+                //std::println("{}", data_fragment);
                 buf_data_stream.push_back(std::stod(data_fragment));
             } catch (const std::exception& e) {
                 std::println(stderr, "Error while processing plot data: {}", e.what());
             }
         }
-    
-        // append new data to the plot buffer
-        for (const auto& val : buf_data_stream) {
-            plot_data_list.push_back(val);
-    
-            if (plot_data_list.size() > MAX_PLOT_DATA) {
-                plot_data_list.pop_front();
+
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            // append new data to the plot buffer
+            for (const auto& val : buf_data_stream) {
+
+                plot_data_list.push_back(val);
+                plot_timestamps.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - plot_begin_time);
+        
+                if (plot_timestamps.back() > PLOT_TIME_WINDOW) {
+                    plot_data_list.pop_front();
+                    plot_timestamps.pop_front();
+                }
             }
         }
+        
     }
+}
+
+void BSP::Controller::clearPlotData() {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    plot_data_list.clear();
+    plot_timestamps.clear();
 }

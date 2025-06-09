@@ -6,6 +6,8 @@
 #include <termios.h>
 #include <vector>
 
+#define DEFAULT_BUF_SIZE 1024
+
 namespace BSP {
     typedef struct baud_rate_t {
         const char* str;

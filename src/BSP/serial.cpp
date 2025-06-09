@@ -1,5 +1,4 @@
 #include "serial.h"
-#include "../common/defines.h"
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
@@ -105,7 +104,7 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
     tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); // Disable any special handling of received bytes
 
     tty.c_cc[VTIME] = 1; // timeout of 1 decisecond
-    tty.c_cc[VMIN]  = 1; // return immediately if no data is available
+    tty.c_cc[VMIN]  = 1; // wait for at least one character
 
     // set baud rate
     cfsetspeed(&tty, baud_rates[t_baud_index].value);
@@ -115,6 +114,9 @@ bool BSP::Serial::configurePort(size_t t_port_index, size_t t_baud_index) {
         std::print(stderr, "Error while saving {} settings: {}", port_str, strerror(errno));
         return false;
     }
+
+    // clear buffer
+    tcflush(serial_port, TCIOFLUSH);
 
     return true;
 }
