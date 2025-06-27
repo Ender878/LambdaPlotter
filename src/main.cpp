@@ -1,7 +1,6 @@
-#include "BSP/app.h"
+#include "BSP/window.h"
 #include "BSP/controller.h"
-#include "common/defines.h"
-#include "BSP/serial.h"
+#include "common/shared.h"
 #include <exception>
 #include <print>
 
@@ -11,7 +10,7 @@ int main(void) {
         BSP::Window::init(WIN_WIDTH, WIN_HEIGHT, "Better Serial Plotter");
 
         while (BSP::Window::renderMainWindow([]() -> void {
-            BSP::Controller::update(BSP::serial);
+            BSP::Controller::update();
         }));
 
         BSP::Window::destroy();

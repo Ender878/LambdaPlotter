@@ -1,14 +1,13 @@
-#include "app.h"
-#include "../common/defines.h"
+#include "window.h"
+#include "../common/shared.h"
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
-#include "serial.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
-#include <deque>
+#include <cstddef>
+#include <format>
 #include <imgui.h>
 #include <mutex>
-#include <print>
 #include <stdexcept>
 #include <vector>
 
@@ -16,7 +15,7 @@ GLFWwindow* BSP::Window::window = nullptr;
 ImGuiIO* BSP::Window::io = nullptr;
 ImGuiStyle* BSP::Window::imgui_style = nullptr;
 ImPlotStyle* BSP::Window::implot_style = nullptr;
-int BSP::Window::m_width = 0;
+int BSP::Window::m_width  = 0;
 int BSP::Window::m_height = 0;
 
 void BSP::Window::init(int t_width, int t_height, const char* title) {
@@ -24,10 +23,10 @@ void BSP::Window::init(int t_width, int t_height, const char* title) {
         throw std::runtime_error("Failed to initialize GLFW.");
     }
 
-    m_width = t_width;
+    m_width  = t_width;
     m_height = t_height;
 
-    // determine opengl version
+    // set opengl version
     const char *glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
@@ -68,7 +67,7 @@ bool BSP::Window::renderMainWindow(std::function<void()> content) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(BSP::Window::getWindowSize());
 
-    ImGui::Begin("better_serial_monitor", nullptr, BSP::MAIN_WIN_FLAGS);
+    ImGui::Begin("better_serial_plotter", nullptr, BSP::MAIN_WIN_FLAGS);
 
     content();
 
@@ -85,9 +84,12 @@ bool BSP::Window::renderMainWindow(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, std::optional<size_t>& current_port, const baud_rate_t* b_rates, size_t& current_rate, bool& open, bool should_read, std::atomic<bool>& refresh_ports) {
-    const char* port = current_port.has_value() && current_port <= serial_ports.size() ? serial_ports[current_port.value()].c_str() : "";
-    const char* baud = b_rates[current_rate].str;
+void BSP::Window::renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state) {
+    size_t baud_index = tb.getComboboxBaudIndex();
+    std::optional<size_t> port_index = tb.getComboboxPortIndex();
+
+    const char* port = port_index.has_value() && port_index <= serial_ports.size() ? serial_ports[port_index.value()].c_str() : "";
+    const char* baud = BSP::baud_rates[baud_index].str;
 
     ImGui::PushItemWidth(m_width / 3.0);
 
@@ -96,10 +98,10 @@ void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, st
     ImGui::SameLine();
     if (ImGui::BeginCombo("##serial", port)) {
         for (size_t i = 0; i < serial_ports.size(); i++) {
-            bool is_selected = current_port == i;
+            bool is_selected = port_index == i;
 
             if (ImGui::Selectable(serial_ports[i].c_str(), is_selected)) {
-                current_port = i;
+                port_index = i;
                 ImGui::SetItemDefaultFocus();
             }
 
@@ -114,10 +116,10 @@ void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, st
     ImGui::SameLine();
     if (ImGui::BeginCombo("##baud", baud)) {
         for (size_t i = 0; i < BSP::baud_rates_size; i++) {
-            bool selected = current_rate == i;
+            bool selected = baud_index == i;
 
-            if (ImGui::Selectable(b_rates[i].str, selected)) {
-                current_rate = i;
+            if (ImGui::Selectable(BSP::baud_rates[i].str, selected)) {
+                baud_index = i;
                 ImGui::SetItemDefaultFocus();
             }
 
@@ -129,12 +131,17 @@ void BSP::Window::renderMenuBar(const std::vector<std::string>& serial_ports, st
 
     ImGui::SameLine();
 
-    open = ImGui::Button(should_read ? "Close" : "Open");
+    bool open_close_bt = ImGui::Button(app_state == READING ? "Close" : "Open");
 
     ImGui::SameLine();
 
-    refresh_ports.store(ImGui::Button("Refresh"));
-} 
+    bool refresh = ImGui::Button("Refresh");
+
+    tb.setComboboxPortIndex(port_index);
+    tb.setComboboxBaudIndex(baud_index);
+    tb.setOpenCloseButton(open_close_bt);
+    tb.setRefreshButton(refresh);
+}
 
 void BSP::Window::destroy() {
     ImGui_ImplOpenGL3_Shutdown();
@@ -146,40 +153,40 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-void BSP::Window::renderPlot(const std::deque<double>& data, const std::deque<long>& timestamps) {
-    if (!data.empty()) {
-        std::deque<double> local_data;
-        std::deque<long> local_timestamps;
+void BSP::Window::renderPlot(const Telemetry& tel) {
+    std::lock_guard<std::mutex> lock(BSP::plot_mtx);
 
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-
-            local_data = data;
-            local_timestamps = timestamps;
-        }
-
-        double data_max = *std::max_element(local_data.begin(), local_data.end());
-        double data_min = *std::min_element(local_data.begin(), local_data.end());
-
-        ImPlot::SetNextAxesLimits(local_timestamps.front(), local_timestamps.back(), data_min - 10, data_max + 10, ImPlotCond_Always);
+    const std::vector<double>* times = tel.getTimestamps();
+    const std::unordered_map<int, std::vector<double>>* data = tel.getData();
+    
+    if (!data->empty()) {
 
         if (ImPlot::BeginPlot("##plot_win")) {
-                ImPlot::SetupAxes("Time", "Data");
+                ImPlot::SetupAxis(ImAxis_X1, "Time (s)");
+                ImPlot::SetupAxis(ImAxis_Y1, "Data", ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit);
 
-                ImPlot::SetupAxisFormat(ImAxis_X1, "%.0f ms");
+                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
 
-                std::vector<double> data_vec(local_data.begin(), local_data.end());
-                std::vector<double> timestamps_vec(local_timestamps.begin(), local_timestamps.end());
-    
-                ImPlot::PlotLine("##plot", timestamps_vec.data(), data_vec.data(), local_timestamps.size());
-    
+                double first_time = times->front();
+                double last_time  = times->back();
+                
+                // Use the actual data range, but limit to window duration
+                double window_start = std::max(first_time, last_time - 5);
+
+                ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
+
+                for (const auto& stream : *data) {
+                    std::string label = std::format("{}", stream.first);
+
+                    ImPlot::PlotLine(label.c_str(), times->data(), stream.second.data(), times->size());
+                }
+
             ImPlot::EndPlot();
         }
     } else {
         ImPlot::BeginPlot("##plot_win");
         ImPlot::EndPlot();
     }
-
 }
 
 ImVec2 BSP::Window::getWindowSize() {

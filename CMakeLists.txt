@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20.0)
-project(better_serial_monitor VERSION 0.1.0 LANGUAGES C CXX)
+project(better_serial_plotter VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,19 +12,22 @@ find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glew REQUIRED)
 
-add_executable(better_serial_monitor
+add_executable(better_serial_plotter
     src/main.cpp 
     src/bindings/imgui_impl_opengl3.cpp 
     src/bindings/imgui_impl_glfw.cpp 
     src/bindings/imgui_impl_opengl3_loader.h 
     src/implot/implot.cpp
     src/implot/implot_items.cpp
-    src/BSP/app.cpp
+    src/BSP/window.cpp
     src/BSP/serial.cpp
     src/BSP/controller.cpp
+    src/BSP/toolbar.cpp
+    src/BSP/telemetry.cpp
+    src/common/shared.cpp
 )
 
-target_link_libraries(better_serial_monitor imgui::imgui glfw GLEW::GLEW)
+target_link_libraries(better_serial_plotter imgui::imgui glfw GLEW::GLEW)
 
 find_package(GTest REQUIRED)
 

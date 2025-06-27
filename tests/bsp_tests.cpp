@@ -1,9 +1,11 @@
+#include <chrono>
+#include <cstddef>
 #include <deque>
 #include <gtest/gtest.h>
-#include <print>
 #include <sstream>
 #include <string>
 #include <termios.h>
+#include <thread>
 #include <vector>
 
 // Test for baud_rate_t array functionality
@@ -54,6 +56,34 @@ TEST(BSP_Test, data_processing) {
     }
 
     EXPECT_EQ(res, expected_res);
+}
+
+TEST(BSP_Test, time_test) {
+    auto start_time = std::chrono::steady_clock::now();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+    auto now = std::chrono::steady_clock::now();
+    auto duration = now - start_time;
+
+    int elapsed = std::chrono::duration<double>(duration).count();
+
+    EXPECT_EQ(1, elapsed);
+}
+
+TEST(BSP_Test, vec_tel_test) {
+    std::vector<double> data;
+    std::vector<double> expected_res = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 };
+
+    for (size_t i = 0; i < 20; i++) {
+        data.push_back(i);
+
+        if (data.size() > 10) {
+            data.erase(data.begin());
+        }
+    }
+
+    EXPECT_EQ(data, expected_res);
 }
 
 int main(int argc, char** argv) {

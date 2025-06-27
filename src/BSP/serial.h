@@ -9,37 +9,30 @@
 #define DEFAULT_BUF_SIZE 1024
 
 namespace BSP {
-    typedef struct baud_rate_t {
-        const char* str;
-        const int   value;
-    } baud_rate_t;
-
-    extern const baud_rate_t baud_rates[];
-    extern const size_t baud_rates_size;
-
     class Serial {
         private:
-            std::vector<std::string> m_serial_ports;
+            int serial_port_fd;
+            
+            static std::string last_open_port;
+            static std::vector<std::string> serial_ports;
 
-            int serial_port;
-
-            std::vector<std::string> getAvailablePorts();
+            static std::vector<std::string> readSystemPorts();
         public:
-            Serial();
+            Serial(const char* port, size_t baud);
             ~Serial();
-
-            bool configurePort(size_t t_port_index, size_t t_baud_index);
 
             bool read(std::vector<char>& buf) const;
 
             bool isPortConnected() const;
 
+            int getFileDescriptor() const;
+
             void close();
 
-            std::vector<std::string>& getSerialPorts(bool refresh = false);
+            static std::vector<std::string>& getSerialPorts(bool refresh = false);
+            static std::string getLastOpenPort();
+            static void setLastOpenPort(const char* port);
     };
-
-    extern Serial serial;
 }
 
 #endif
