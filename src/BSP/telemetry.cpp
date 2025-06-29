@@ -1,6 +1,7 @@
 #include "../common/shared.h"
 #include "telemetry.h"
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <ctime>
@@ -40,14 +41,15 @@ void BSP::Telemetry::processData(std::vector<char>& buffer) {
         std::stringstream data_frame_stream(data_frame);
         std::string data_chunk;
 
+        // std::println("{}", data_frame);
+
         // lock the thread while the plot data is updated
         std::lock_guard<std::mutex> lock(BSP::plot_mtx);
         while (std::getline(data_frame_stream, data_chunk, '\n')) {
             dataFormatSpaces(data_chunk);
-
-            times.push_back(getUnixTimestamp());
             
             if (times.size() > max_size) {
+
                 for (auto& stream : values) {
                     stream.second.erase(stream.second.begin());
                 }
@@ -62,17 +64,21 @@ void BSP::Telemetry::processData(std::vector<char>& buffer) {
 void BSP::Telemetry::dataFormatSpaces(const std::string& data_chunk) {
     std::stringstream data_chunk_stream(data_chunk);
     std::string value;
-    size_t i = 0;
+    size_t i = 1;
 
     while (std::getline(data_chunk_stream, value, ' ')) {
         try {
-            values[i + 1].push_back(std::stod(value));
+            values[i].push_back(std::stod(value));
         } catch (const std::exception &e) {
-            std::println(stderr, "Error while processing plot data: {}", e.what());
-            clearIncompleteChunk();
+            values[i].push_back(NAN);
         }
 
         i++;
+    }
+
+    // set the time point only if something has been read
+    if (i > 1) {
+        times.push_back(getUnixTimestamp());
     }
 }
 
@@ -86,21 +92,16 @@ void BSP::Telemetry::clear() {
     times.clear();
 }
 
-double BSP::Telemetry::getUnixTimestamp() const {
+double BSP::Telemetry::getUnixTimestamp() {
     auto now = std::chrono::system_clock::now();
 
     return std::chrono::duration<double>(now.time_since_epoch()).count();
 }
 
-// TODO: improve and implement Save button
-void BSP::Telemetry::dump_data(std::string device_path) const {
+// TODO: save only time window.
+void BSP::Telemetry::dump_data(std::string path) const {
     size_t i = 0;
-
-    std::string home = std::getenv("HOME");
-    std::string datetime = getCurrDateTime();
-    std::string device = device_path.erase(0, device_path.find_last_of("/"));
-
-    std::ofstream dump(home + LOG_PATH + "/" + device + "_" + datetime + ".csv");
+    std::ofstream dump(path);
 
     if (!dump.is_open()) {
         std::println(stderr, "Error while opening dump file.");
@@ -109,18 +110,19 @@ void BSP::Telemetry::dump_data(std::string device_path) const {
 
     std::print(dump, "times");
 
+    std::lock_guard<std::mutex> lock(BSP::plot_mtx);
     for (const auto& el : values) {
         std::print(dump, ";{}", el.first);
     }
     std::println(dump);
 
     for (const auto& t : times) {
-        std::print(dump, "{}", t);
+        std::print(dump, "{}", formatUnixTimestamp(t));
 
         for (const auto& el : values) {
             std::string el_str = "";
 
-            if (i < times.size() - 1 && i < el.second.size() - 1) {
+            if (i <= times.size() - 1 && i <= el.second.size() - 1) {
                 el_str = std::format("{}", el.second.at(i));
             }
 
@@ -135,16 +137,22 @@ void BSP::Telemetry::dump_data(std::string device_path) const {
     dump.close();
 }
 
-std::string BSP::Telemetry::getCurrDateTime() const {
+std::string BSP::Telemetry::formatUnixTimestamp(double unix_timestamp) {
     // get time from system clock
-    time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    time_t time = static_cast<time_t>(unix_timestamp);
 
     // convert time to `tm` struct
-    std::tm tm = *std::localtime(&now);
+    std::tm tm = *std::localtime(&time);
 
     // format the string
     std::ostringstream oss;
     oss << std::put_time(&tm, "%Y-%m-%d_%H:%M:%S");
 
     return oss.str();
+}
+
+bool BSP::Telemetry::is_empty() const {
+    std::lock_guard<std::mutex> lock(plot_mtx);
+
+    return values.empty();
 }

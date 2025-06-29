@@ -15,8 +15,10 @@ namespace BSP {
             static app_state_t curr_app_state;
 
             static void startSerialReading(std::string port, size_t baud);
+            static void saveFile();
         public:
             static void update();
+            static void shutdown();
     };
 }
 

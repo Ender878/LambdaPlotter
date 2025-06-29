@@ -27,9 +27,11 @@ namespace BSP {
 
             static bool renderMainWindow(std::function<void()> content);
 
-            static void renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state);
+            static void renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state, bool is_dataset_empty);
 
-            static void renderPlot(const Telemetry& tel);
+            static void renderPlot(const Telemetry& tel, const size_t time_window_index, const app_state_t app_state);
+
+            static std::string saveFileDialog(const char* default_path);
 
             static void destroy();
 

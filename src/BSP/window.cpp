@@ -1,5 +1,6 @@
 #include "window.h"
 #include "../common/shared.h"
+#include "../tinyfd/tinyfiledialogs.h"
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
 #include <GLFW/glfw3.h>
@@ -9,6 +10,7 @@
 #include <imgui.h>
 #include <mutex>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 GLFWwindow* BSP::Window::window = nullptr;
@@ -84,14 +86,16 @@ bool BSP::Window::renderMainWindow(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void BSP::Window::renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state) {
+void BSP::Window::renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state, bool is_dataset_empty) {
     size_t baud_index = tb.getComboboxBaudIndex();
+    size_t time_index = tb.getComboboxTimeIndex();
     std::optional<size_t> port_index = tb.getComboboxPortIndex();
 
     const char* port = port_index.has_value() && port_index <= serial_ports.size() ? serial_ports[port_index.value()].c_str() : "";
     const char* baud = BSP::baud_rates[baud_index].str;
+    const char* time = BSP::time_windows[time_index].str;
 
-    ImGui::PushItemWidth(m_width / 3.0);
+    ImGui::PushItemWidth(m_width / 5.0);
 
     // ====== Serial ports combo box ====== 
     ImGui::Text("Serial");
@@ -127,6 +131,24 @@ void BSP::Window::renderToolBar(ToolBar& tb, const std::vector<std::string>& ser
         ImGui::EndCombo();
     }
 
+    ImGui::SameLine();
+
+    // ====== Time window combo box ======
+    ImGui::Text("Time Window");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##time", time)) {
+        for (size_t i = 0; i < BSP::baud_time_size; i++) {
+            bool selected = time_index == i;
+
+            if (ImGui::Selectable(BSP::time_windows[i].str, selected)) {
+                time_index = i;
+                ImGui::SetItemDefaultFocus();
+            }
+
+        }
+        ImGui::EndCombo();
+    }
+
     ImGui::PopItemWidth();
 
     ImGui::SameLine();
@@ -137,10 +159,34 @@ void BSP::Window::renderToolBar(ToolBar& tb, const std::vector<std::string>& ser
 
     bool refresh = ImGui::Button("Refresh");
 
+    ImGui::SameLine();
+
+    if (is_dataset_empty) {
+        ImGui::BeginDisabled();
+    }
+
+    bool save = ImGui::Button("Save");
+
+    if (is_dataset_empty) {
+        ImGui::EndDisabled();
+    }
+
+    // stop reading if the Save button has been pressed
+    if (app_state == READING && save) {
+        open_close_bt = true;
+    }
+
+    ImGui::SameLine();
+
+    bool clear = ImGui::Button("Clear");
+
     tb.setComboboxPortIndex(port_index);
     tb.setComboboxBaudIndex(baud_index);
+    tb.setComboboxTimeIndex(time_index);
     tb.setOpenCloseButton(open_close_bt);
     tb.setRefreshButton(refresh);
+    tb.setSaveButton(save);
+    tb.setClearButton(clear);
 }
 
 void BSP::Window::destroy() {
@@ -153,7 +199,7 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-void BSP::Window::renderPlot(const Telemetry& tel) {
+void BSP::Window::renderPlot(const Telemetry& tel, const size_t time_window_index, const app_state_t app_state) {
     std::lock_guard<std::mutex> lock(BSP::plot_mtx);
 
     const std::vector<double>* times = tel.getTimestamps();
@@ -163,22 +209,27 @@ void BSP::Window::renderPlot(const Telemetry& tel) {
 
         if (ImPlot::BeginPlot("##plot_win")) {
                 ImPlot::SetupAxis(ImAxis_X1, "Time (s)");
-                ImPlot::SetupAxis(ImAxis_Y1, "Data", ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit);
+                ImPlot::SetupAxis(ImAxis_Y1, "Data", (app_state == READING) ? ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_RangeFit : 0);
 
                 ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
 
                 double first_time = times->front();
                 double last_time  = times->back();
-                
-                // Use the actual data range, but limit to window duration
-                double window_start = std::max(first_time, last_time - 5);
 
-                ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
+                int time_window = BSP::time_windows[time_window_index].value;
+                
+                // Set time window, if there is.
+                double window_start = (time_window != 0)
+                    ? std::max(first_time, last_time - time_window)
+                    : first_time;
+
+                if (app_state == READING)
+                    ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
 
                 for (const auto& stream : *data) {
                     std::string label = std::format("{}", stream.first);
 
-                    ImPlot::PlotLine(label.c_str(), times->data(), stream.second.data(), times->size());
+                    ImPlot::PlotLine(label.c_str(), times->data(), stream.second.data(), stream.second.size());
                 }
 
             ImPlot::EndPlot();
@@ -187,6 +238,22 @@ void BSP::Window::renderPlot(const Telemetry& tel) {
         ImPlot::BeginPlot("##plot_win");
         ImPlot::EndPlot();
     }
+}
+
+std::string BSP::Window::saveFileDialog(const char* default_path) {
+    const char* path = tinyfd_saveFileDialog(
+        "Save data", 
+        default_path, 
+        0, 
+        nullptr, 
+        "CSV Files (*.csv)"
+    );
+
+    if (path) {
+        return path;
+    }
+
+    return std::string();
 }
 
 ImVec2 BSP::Window::getWindowSize() {

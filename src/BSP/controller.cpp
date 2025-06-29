@@ -4,6 +4,7 @@
 #include "telemetry.h"
 #include "toolbar.h"
 #include "window.h"
+#include <algorithm>
 #include <chrono>
 
 #include <cstddef>
@@ -28,7 +29,7 @@ void BSP::Controller::update() {
     toolbar.updateSerialPorts(serial_ports);
 
     // render toolbar with new data
-    BSP::Window::renderToolBar(toolbar, serial_ports, curr_app_state);
+    BSP::Window::renderToolBar(toolbar, serial_ports, curr_app_state, tel.is_empty());
 
     // get updated app state (if we should read or close)
     curr_app_state = toolbar.getAppState(curr_app_state);
@@ -42,9 +43,39 @@ void BSP::Controller::update() {
         }
     }
 
-    BSP::Window::renderPlot(tel);
+    if (toolbar.getSaveButton()) {
+        saveFile();
+    }
+
+    if (toolbar.getClearButton()) {
+        std::lock_guard<std::mutex> lock(plot_mtx);
+        tel.clear();
+        tel.setStartTime();
+    }
+
+    BSP::Window::renderPlot(tel, toolbar.getComboboxTimeIndex(), curr_app_state);
 
     prev_app_state = curr_app_state;
+}
+
+void BSP::Controller::saveFile() {
+    std::string device_name = Serial::getLastOpenPort();
+    device_name.erase(0, device_name.find_last_of("/") + 1);
+    std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::formatUnixTimestamp(Telemetry::getUnixTimestamp()) + ".csv";        
+
+    // sanitize default file name (remove ':' from unix timestamp)
+    std::replace(default_file_name.begin(), default_file_name.end(), ':', '-');
+
+    std::string path = BSP::Window::saveFileDialog(default_file_name.c_str());
+
+    if (!path.empty()) {
+        tel.dump_data(path);
+    }
+}
+
+void BSP::Controller::shutdown() {
+    // set app state to IDLE to make sure to close possible device connections
+    curr_app_state = IDLE;
 }
 
 void BSP::Controller::startSerialReading(std::string port, size_t baud) {
@@ -58,8 +89,6 @@ void BSP::Controller::startSerialReading(std::string port, size_t baud) {
                 std::lock_guard<std::mutex> lock(BSP::plot_mtx);
 
                 if (port != last_open_port) {
-                    // if (!last_open_port.empty())
-                    //     tel.dump_data(last_open_port.c_str());
                     tel.clear();
                     tel.setStartTime();
                 } else {

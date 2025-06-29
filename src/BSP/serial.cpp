@@ -5,6 +5,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fcntl.h>
+#include <thread>
 #include <stdexcept>
 #include <termios.h>
 #include <unistd.h>
@@ -16,7 +17,7 @@ BSP::Serial::Serial(const char* port, size_t baud) {
     termios tty;
 
     // get port file descriptor
-    serial_port_fd = open(port, O_RDONLY | O_NOCTTY | O_SYNC);
+    serial_port_fd = open(port, O_RDONLY);
 
     // check for errors
     if (serial_port_fd < 0) {
@@ -79,6 +80,7 @@ BSP::Serial::Serial(const char* port, size_t baud) {
     }
 
     // clear buffer
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
     tcflush(serial_port_fd, TCIOFLUSH);
 
     last_open_port = port;
@@ -106,7 +108,7 @@ std::vector<std::string> BSP::Serial::readSystemPorts() {
             entry_str.find("ttyUSB") != std::string::npos) 
         {
             ports.push_back(entry_str);
-        } 
+        }
     }
 
     return ports;

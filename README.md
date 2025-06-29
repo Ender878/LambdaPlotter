@@ -9,4 +9,3 @@
 CC=clang CXX=clang++ PKG_CONFIG_PATH=/usr/lib/pkgconfig conan install . --output-folder=build --build=missing -s build_type=<Debug|Release>
 
 ```
-

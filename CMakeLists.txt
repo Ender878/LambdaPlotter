@@ -25,9 +25,10 @@ add_executable(better_serial_plotter
     src/BSP/toolbar.cpp
     src/BSP/telemetry.cpp
     src/common/shared.cpp
+    src/tinyfd/tinyfiledialogs.c
 )
 
-target_link_libraries(better_serial_plotter imgui::imgui glfw GLEW::GLEW)
+target_link_libraries(better_serial_plotter PRIVATE imgui::imgui glfw GLEW::GLEW)
 
 find_package(GTest REQUIRED)
 

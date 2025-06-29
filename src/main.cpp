@@ -13,6 +13,8 @@ int main(void) {
             BSP::Controller::update();
         }));
 
+        BSP::Controller::shutdown();
+
         BSP::Window::destroy();
     } catch (const std::exception& e) {
         std::println(stderr, "ERROR: {}", e.what());

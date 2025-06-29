@@ -19,7 +19,6 @@ namespace BSP {
             std::chrono::system_clock::time_point start_time;
 
             void dataFormatSpaces(const std::string& data_chunk);
-            std::string getCurrDateTime() const;
         public:
             Telemetry(size_t t_max_size = DATA_MAX_SIZE);
 
@@ -32,12 +31,15 @@ namespace BSP {
 
             void clear();
 
-            double getUnixTimestamp() const;
+            static double getUnixTimestamp();
 
             inline std::unordered_map<int, std::vector<double>> const* getData() const { return &values; }
             inline std::vector<double> const* getTimestamps() const { return &times; };
 
-            void dump_data(std::string device_path) const;
+            static std::string formatUnixTimestamp(double unix_timestamp);
+
+            void dump_data(std::string path) const;
+            bool is_empty() const;
     };
 }
 
