@@ -32,23 +32,23 @@ class ToolBar {
 
         app_state_t getAppState(const app_state_t &curr_app_state) const;
 
-        inline bool getClearButton() const { return clear_button; }
-        inline bool getSaveButton() const { return save_button; }
-        inline size_t getComboboxTimeIndex() const { return combobox_time_index; }
+        inline bool getClearButton()                        const { return clear_button; }
+        inline bool getSaveButton()                         const { return save_button; }
+        inline size_t getComboboxTimeIndex()                const { return combobox_time_index; }
         inline std::optional<size_t> getComboboxPortIndex() const { return combobox_port_index;}
-        inline size_t getComboboxBaudIndex() const { return combobox_baud_index; }
-        inline bool getOpenCloseButton() const { return open_close_button; }
-        inline bool getRefreshButton() const { return refresh_button; }
-        inline std::string getCurrentPort() const { return current_port; }
+        inline size_t getComboboxBaudIndex()                const { return combobox_baud_index; }
+        inline bool getOpenCloseButton()                    const { return open_close_button; }
+        inline bool getRefreshButton()                      const { return refresh_button; }
+        inline std::string getCurrentPort()                 const { return current_port; }
 
-        inline void setClearButton(bool value) { clear_button = value; }
-        inline void setComboboxTimeIndex(size_t value) { combobox_time_index = value; }
-        inline void setComboboxPortIndex(std::optional<size_t> value) { combobox_port_index = value; }
-        inline void setComboboxBaudIndex(size_t value) { combobox_baud_index = value; }
-        inline void setOpenCloseButton(bool value) { open_close_button = value; }
-        inline void setRefreshButton(bool value) { refresh_button = value; }
-        inline void setCurrentPort(const char *value) { current_port = value; }
-        inline void setSaveButton(bool value) { save_button = value; } 
+        inline void setClearButton(bool value)                          { clear_button = value; }
+        inline void setComboboxTimeIndex(size_t value)                  { combobox_time_index = value; }
+        inline void setComboboxPortIndex(std::optional<size_t> value)   { combobox_port_index = value; }
+        inline void setComboboxBaudIndex(size_t value)                  { combobox_baud_index = value; }
+        inline void setOpenCloseButton(bool value)                      { open_close_button = value; }
+        inline void setRefreshButton(bool value)                        { refresh_button = value; }
+        inline void setCurrentPort(const char *value)                   { current_port = value; }
+        inline void setSaveButton(bool value)                           { save_button = value; } 
     };
 } // namespace BSP
 

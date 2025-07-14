@@ -9,3 +9,11 @@
 CC=clang CXX=clang++ PKG_CONFIG_PATH=/usr/lib/pkgconfig conan install . --output-folder=build --build=missing -s build_type=<Debug|Release>
 
 ```
+
+## TODO
+
+- [ ] window styling
+- [ ] serial configuration (data bits, stop bit, ecc...)
+- [ ] data analysis (sample rate, max, min, avg, ...)
+- [ ] incoming data panel
+- [ ] serial monitor + serial writing

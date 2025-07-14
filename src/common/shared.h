@@ -4,11 +4,10 @@
 #include <mutex>
 #include <termios.h>
 
-#define WIN_WIDTH  1150
+#define WIN_WIDTH  1200
 #define WIN_HEIGHT 600
 
 #define THREAD_READ_DELAY 5 // ms
-#define LOG_PATH "/Dev/better_serial_plotter"
 
 #define DATA_MAX_SIZE 100000
 

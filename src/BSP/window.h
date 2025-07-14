@@ -22,12 +22,23 @@ namespace BSP {
 
             static int m_width;
             static int m_height;
+
+            static void setDarkStyle();
+            static void loadDefaultFont();
+            static void loadIconFont();
         public:
             static void init(int t_width, int t_height, const char* title);
 
             static bool renderMainWindow(std::function<void()> content);
 
             static void renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state, bool is_dataset_empty);
+
+            // TODO
+            static void renderSerialConf(bool enabled);
+
+            static void renderTelemetry();
+
+            static void renderPlotConf(); 
 
             static void renderPlot(const Telemetry& tel, const size_t time_window_index, const app_state_t app_state);
 

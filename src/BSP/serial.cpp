@@ -5,7 +5,9 @@
 #include <cstring>
 #include <filesystem>
 #include <fcntl.h>
+#include <format>
 #include <thread>
+#include <sys/file.h>
 #include <stdexcept>
 #include <termios.h>
 #include <unistd.h>
@@ -13,58 +15,88 @@
 std::string BSP::Serial::last_open_port = "";
 std::vector<std::string> BSP::Serial::serial_ports = readSystemPorts();
 
+uint16_t BSP::Serial::parity    = 0;         // parity bit disabled
+uint16_t BSP::Serial::stop_bits = 1;         // 1 stop bit
+uint16_t BSP::Serial::data_bits = CS8;       // 8 data bits
+uint16_t BSP::Serial::flow_ctrl = 0;         // hardware flow control disabled
+
 BSP::Serial::Serial(const char* port, size_t baud) {
     termios tty;
 
     // get port file descriptor
-    serial_port_fd = open(port, O_RDONLY);
+    serial_port_fd = open(port, O_RDWR | O_NOCTTY);
 
     // check for errors
     if (serial_port_fd < 0) {
         // std::print(stderr, "Error while opening {}: {}", port, strerror(serial_port_fd));
-        throw std::runtime_error(strerror(serial_port_fd));
+        throw std::runtime_error(std::format("Error while opening {}: {}", port, strerror(serial_port_fd)));
+    }
+
+    // try to lock the port to prevent concurrent reading/writing
+    if (flock(serial_port_fd, LOCK_EX | LOCK_NB) == -1) {
+        ::close(serial_port_fd);
+        throw std::runtime_error(std::format("{} is already in use!", port));
     }
 
     // read existing settings
     if (tcgetattr(serial_port_fd, &tty) != 0) {
         // std::print(stderr, "Error while reading {} settings: {}", port, strerror(errno));
-        throw std::runtime_error(strerror(serial_port_fd));
+        throw std::runtime_error(std::format("Error while reading {} settings: {}", port, strerror(errno)));
     }
 
-    // parity bit
-    tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
-    // tty.c_cflag |= PARENB;  // Set parity bit, enabling parity
+    // parity
+    // - disabled
+    // - even
+    // - odd
+    if (parity)  {
+        tty.c_cflag |= parity;      // Set parity bit, enabling parity
+        tty.c_iflag |= INPCK;       // Enable parity checking
+    } else {
+        tty.c_cflag &= ~PARENB;     // Clear parity bit, disabling parity (most common)
+        tty.c_iflag &= ~INPCK;      // Disable parity checking
+    }
 
     // stop bits
-    tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
-    // tty.c_cflag |= CSTOPB;  // Set stop field, two stop bits used in communication
-
-    // data bits
+    if (stop_bits == 1) {
+        tty.c_cflag &= ~CSTOPB;    // Clear stop field, only one stop bit used in communication (most common)
+    } else {
+        tty.c_cflag |= CSTOPB;     // Set stop field, two stop bits used in communication
+    }
+    
+    // data bits (n << 4)
     tty.c_cflag &= ~CSIZE; // Clear all the size bits, then use one of the statements below
     // tty.c_cflag |= CS5; // 5 bits per byte
     // tty.c_cflag |= CS6; // 6 bits per byte
     // tty.c_cflag |= CS7; // 7 bits per byte
-    tty.c_cflag |= CS8; // 8 bits per byte (most common)
+    // tty.c_cflag |= CS8; // 8 bits per byte (most common)
+    tty.c_cflag |= data_bits;
 
-    // hardware flow control
-    tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control (most common)
-    // tty.c_cflag |= CRTSCTS;  // Enable RTS/CTS hardware flow control
+    // flow control
+    if (flow_ctrl == 1) {
+        tty.c_cflag |= CRTSCTS;                 // Enable RTS/CTS hardware flow control
+    } else if (flow_ctrl == 2) {
+        tty.c_iflag |= (IXON | IXOFF | IXANY);  // enable software flow control
+    } else {
+        tty.c_cflag &= ~CRTSCTS;                // Disable RTS/CTS hardware flow control (most common)
+        tty.c_iflag &= ~(IXON | IXOFF | IXANY); // disable software flow control
+    }
 
     // CREAD and CLOCAL
     tty.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL)
 
+    // == LOCAL FLAGS ==
+    // Local flags are used to control how the terminal processes characters.
     // disable canonical mode (read only when new line, not ideal for serial communications)
     tty.c_lflag &= ~ICANON;
 
-    tty.c_lflag &= ~ECHO; // Disable echo
-    tty.c_lflag &= ~ECHOE; // Disable erasure
+    tty.c_lflag &= ~ECHO;   // Disable echo
+    tty.c_lflag &= ~ECHOE;  // Disable erasure
     tty.c_lflag &= ~ECHONL; // Disable new-line echo
 
     // disable signal chars 
     tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
 
-    // disable software flow control
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
+    // == INPUT FLAGS ==
     tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); // Disable any special handling of received bytes
 
     tty.c_cc[VTIME] = 1; // timeout of 1 decisecond

@@ -26,6 +26,8 @@ add_executable(better_serial_plotter
     src/BSP/telemetry.cpp
     src/common/shared.cpp
     src/tinyfd/tinyfiledialogs.c
+    src/fonts/lucide.c
+    src/fonts/roboto.c
 )
 
 target_link_libraries(better_serial_plotter PRIVATE imgui::imgui glfw GLEW::GLEW)
