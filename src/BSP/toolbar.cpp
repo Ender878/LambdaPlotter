@@ -1,7 +1,11 @@
-#include "toolbar.h"
+#include <BSP/toolbar.h>
+#include <BSP/serial.h>
+#include "../fonts/lucide.h"
 
+#include <imgui.h>
 #include <algorithm>
 #include <string>
+#include <vector>
 
 void BSP::ToolBar::updateSerialPorts(const std::vector<std::string> &serial_ports) {
     if (refresh_button) {
@@ -40,4 +44,194 @@ BSP::app_state_t BSP::ToolBar::getAppState(const app_state_t &curr_app_state) co
     }
 
     return state;
+}
+
+void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::vector<std::string>& serial_ports) {
+    // get prev selected port and baud rate
+    const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() ? serial_ports[combobox_port_index.value()].c_str() : "";
+    const char* selected_baud = BSP::baud_rates[combobox_baud_index].str;
+    // const char* time = BSP::time_windows[combobox_time_index].str;
+
+    ImGui::SeparatorText("Serial interface");
+
+    if (ImGui::BeginTable("##toolbar_layout", 2)) {
+        ImGui::TableSetupColumn("Left",  ImGuiTableColumnFlags_WidthStretch, 0.4f);
+        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.6f);
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        // ====== Serial ports combo box ====== 
+        ImGui::Text("Serial port");
+        ImGui::TableNextColumn();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 5);
+        if (ImGui::BeginCombo("##serial", selected_port)) {
+            for (size_t i = 0; i < serial_ports.size(); i++) {
+                bool is_selected = combobox_port_index == i;
+
+                if (ImGui::Selectable(serial_ports[i].c_str(), is_selected)) {
+                    combobox_port_index = i;
+                    ImGui::SetItemDefaultFocus();
+                }
+
+            }
+            ImGui::EndCombo();
+        }
+        
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        // ====== Baud rates combo box ======
+        ImGui::Text("Baud rate");
+        ImGui::TableNextColumn();
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 5);
+        if (ImGui::BeginCombo("##baud", selected_baud)) {
+            for (size_t i = 0; i < BSP::baud_rates_size; i++) {
+                bool selected = combobox_baud_index == i;
+
+                if (ImGui::Selectable(BSP::baud_rates[i].str, selected)) {
+                    combobox_baud_index = i;
+                    ImGui::SetItemDefaultFocus();
+                }
+
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::EndTable();
+    }
+
+    // ====== Buttons ======
+    if (ImGui::BeginTable("Buttons", 3)) {
+        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3f);
+        ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthStretch, 0.3f);
+        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.3f);
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        // calc buttons size        
+        ImVec2 buttons_size;
+        buttons_size.x = buttons_size.y = ICON_SIZE + (ICON_SIZE / 6.0f) * 2;
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, ICON_SIZE);
+        refresh_button = ImGui::Button(ICON_LC_REFRESH, buttons_size);
+
+        ImGui::TableNextColumn();
+        
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+        open_close_button = ImGui::Button(app_state == READING ? ICON_LC_PAUSE : ICON_LC_PLAY, buttons_size);
+        
+        ImGui::TableNextColumn();
+        
+        if (no_telemetry) {
+            ImGui::BeginDisabled();
+        }
+    
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+        save_button = ImGui::Button(ICON_LC_SAVE, buttons_size);
+        ImGui::PopStyleVar();
+        
+        if (no_telemetry) {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::EndTable();
+    }
+
+    // stop reading if the Save button has been pressed
+    if (app_state == READING && save_button) {
+        open_close_button = true;
+    }
+
+    // =========== ADVANCED SERIAL CONFIG =========== 
+    if (ImGui::TreeNode("Advanced configuration")) {
+
+        if (app_state == READING) {
+            ImGui::BeginDisabled();
+        }
+
+        uint16_t parity      = Serial::getParity();
+        uint16_t stop_bits   = Serial::getStopBits();
+        uint16_t data_bits   = Serial::getDataBits();
+        uint16_t flow_ctrl   = Serial::getFlowCtrl();
+
+        // === Parity bit ===
+        ImGui::Text("Parity:");
+
+        if (ImGui::RadioButton("Disabled###ParityDIS", !parity)) {
+            parity = 0;
+        }
+
+        if (ImGui::RadioButton("Even###ParityEV", parity == PARENB)) {
+            parity = PARENB;
+        }
+
+        if (ImGui::RadioButton("Odd###ParityODD", parity == (PARENB | PARODD))) {
+            parity = PARENB | PARODD;
+        }
+
+        // === Stop bits ===
+        ImGui::Text("Stop bits:");
+
+        if (ImGui::RadioButton("1###Stop1", stop_bits == 1)) {
+            stop_bits = 1;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::RadioButton("2###Stop2", stop_bits == 2)) {
+            stop_bits = 2;
+        }
+
+        // === Data bits ===
+        ImGui::Text("Data bits:");
+
+        if (ImGui::RadioButton("5###Data1", data_bits == CS5)) {
+            data_bits = CS5;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::RadioButton("6###Data2", data_bits == CS6)) {
+            data_bits = CS6;
+        }
+
+        if (ImGui::RadioButton("7###Data3", data_bits == CS7)) {
+            data_bits = CS7;
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::RadioButton("8###Data4", data_bits == CS8)) {
+            data_bits = CS8;
+        }
+
+        // === Flow ctrl ===
+        ImGui::Text("Flow control:");
+
+        if (ImGui::RadioButton("Disabled###FlowDIS", !flow_ctrl)) {
+            flow_ctrl = 0;
+        }
+
+        if (ImGui::RadioButton("RTS/CTS###FlowHW", flow_ctrl == 1)) {
+            flow_ctrl = 1;
+        }
+
+        if (ImGui::RadioButton("XON/XOFF###FlowSW", flow_ctrl == 2)) {
+            flow_ctrl = 2;
+        }
+
+        Serial::setParity(parity);
+        Serial::setStopBits(stop_bits);
+        Serial::setDataBits(data_bits);
+        Serial::setFlowCtrl(flow_ctrl);
+
+        if (app_state == READING) {
+            ImGui::EndDisabled();
+        }
+
+        ImGui::TreePop();
+    }
 }

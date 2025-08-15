@@ -7,7 +7,7 @@
 int main(void) {
 
     try {
-        BSP::Window::init(WIN_WIDTH, WIN_HEIGHT, "Better Serial Plotter");
+        BSP::Window::init(MIN_WIN_WIDTH, MIN_WIN_HEIGHT, "Better Serial Plotter");
 
         while (BSP::Window::renderMainWindow([]() -> void {
             BSP::Controller::update();

@@ -1,4 +1,4 @@
-#include "serial.h"
+#include <BSP/serial.h>
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
@@ -32,7 +32,7 @@ BSP::Serial::Serial(const char* port, size_t baud) {
         throw std::runtime_error(std::format("Error while opening {}: {}", port, strerror(serial_port_fd)));
     }
 
-    // try to lock the port to prevent concurrent reading/writing
+    // lock the port to prevent concurrent reading/writing
     if (flock(serial_port_fd, LOCK_EX | LOCK_NB) == -1) {
         ::close(serial_port_fd);
         throw std::runtime_error(std::format("{} is already in use!", port));
@@ -74,8 +74,10 @@ BSP::Serial::Serial(const char* port, size_t baud) {
     // flow control
     if (flow_ctrl == 1) {
         tty.c_cflag |= CRTSCTS;                 // Enable RTS/CTS hardware flow control
+        tty.c_iflag &= ~(IXON | IXOFF | IXANY);
     } else if (flow_ctrl == 2) {
         tty.c_iflag |= (IXON | IXOFF | IXANY);  // enable software flow control
+        tty.c_cflag &= ~CRTSCTS;
     } else {
         tty.c_cflag &= ~CRTSCTS;                // Disable RTS/CTS hardware flow control (most common)
         tty.c_iflag &= ~(IXON | IXOFF | IXANY); // disable software flow control
@@ -119,6 +121,8 @@ BSP::Serial::Serial(const char* port, size_t baud) {
 }
 
 BSP::Serial::~Serial() {
+    // unlock and close the serial port
+    flock(serial_port_fd, LOCK_UN);
     ::close(serial_port_fd);
 }
 
@@ -157,9 +161,9 @@ void BSP::Serial::setLastOpenPort(const char* port) {
 bool BSP::Serial::read(std::vector<char>& buf) const {
     buf.resize(DEFAULT_BUF_SIZE);
 
-    if (!isPortConnected()) {
-        return false;
-    }
+    // if (!isPortConnected()) {
+    //     return false;
+    // }
 
     int n = ::read(serial_port_fd, buf.data(), buf.size());
 

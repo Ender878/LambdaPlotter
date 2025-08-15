@@ -1,14 +1,16 @@
 #ifndef __APP_H__
 #define __APP_H__
 
-#include "../bindings/imgui_impl_glfw.h"
-#include "../implot/implot.h"
-#include "telemetry.h"
-#include "toolbar.h"
+#include <BSP/telemetry.h>
+#include <BSP/toolbar.h>
 #include <functional>
 #include <imgui.h>
 #include <string>
-#include <vector>
+
+struct GLFWwindow;
+struct ImGuiIO;
+struct ImGuiStyle;
+struct ImPlotStyle;
 
 namespace BSP {
     constexpr ImGuiWindowFlags MAIN_WIN_FLAGS = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
@@ -30,6 +32,8 @@ namespace BSP {
             static void init(int t_width, int t_height, const char* title);
 
             static bool renderMainWindow(std::function<void()> content);
+
+            static void renderMenuBar(std::function<void()> content);
 
             static void renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state, bool is_dataset_empty);
 

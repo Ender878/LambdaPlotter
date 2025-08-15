@@ -4,8 +4,8 @@
 #include <mutex>
 #include <termios.h>
 
-#define WIN_WIDTH  1200
-#define WIN_HEIGHT 600
+#define MIN_WIN_WIDTH  1400
+#define MIN_WIN_HEIGHT 800
 
 #define THREAD_READ_DELAY 5 // ms
 
@@ -29,7 +29,7 @@ namespace BSP {
     extern const combobox_tuple_t time_windows[];
 
     extern const size_t baud_rates_size;
-    extern const size_t baud_time_size;
+    extern const size_t time_windows_size;
 }
 
 #endif

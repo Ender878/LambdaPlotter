@@ -1785,8 +1785,10 @@ void PlotShaded(const char* label_id, const T* values, int count, double y_ref, 
     PlotShadedEx(label_id, getter1, getter2, flags);
 }
 
+// === MODIFIED BY BSP == (remove y_ref)
 template <typename T>
-void PlotShaded(const char* label_id, const T* xs, const T* ys, int count, double y_ref, ImPlotShadedFlags flags, int offset, int stride) {
+void PlotShaded(const char* label_id, const T* xs, const T* ys, int count, /*double y_ref,*/ ImPlotShadedFlags flags, int offset, int stride) {
+    double y_ref = 0;
     if (y_ref == -HUGE_VAL)
         y_ref = GetPlotLimits(IMPLOT_AUTO,IMPLOT_AUTO).Y.Min;
     if (y_ref == HUGE_VAL)
@@ -1806,7 +1808,7 @@ void PlotShaded(const char* label_id, const T* xs, const T* ys1, const T* ys2, i
 
 #define INSTANTIATE_MACRO(T) \
     template IMPLOT_API void PlotShaded<T>(const char* label_id, const T* values, int count, double y_ref, double xscale, double x0, ImPlotShadedFlags flags, int offset, int stride); \
-    template IMPLOT_API void PlotShaded<T>(const char* label_id, const T* xs, const T* ys, int count, double y_ref, ImPlotShadedFlags flags, int offset, int stride); \
+    template IMPLOT_API void PlotShaded<T>(const char* label_id, const T* xs, const T* ys, int count, /*double y_ref,*/ ImPlotShadedFlags flags, int offset, int stride); \
     template IMPLOT_API void PlotShaded<T>(const char* label_id, const T* xs, const T* ys1, const T* ys2, int count, ImPlotShadedFlags flags, int offset, int stride);
 CALL_INSTANTIATE_FOR_NUMERIC_TYPES()
 #undef INSTANTIATE_MACRO

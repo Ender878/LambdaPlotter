@@ -1,6 +1,7 @@
 #ifndef __CONTROLLER_H__
 #define __CONTROLLER_H__
 
+#include "plotView.h"
 #include "telemetry.h"
 #include "toolbar.h"
 #include <string>
@@ -10,6 +11,7 @@ namespace BSP {
         private:
             static ToolBar toolbar;
             static Telemetry tel;
+            static PlotView plot_view;
             
             static app_state_t prev_app_state;
             static app_state_t curr_app_state;

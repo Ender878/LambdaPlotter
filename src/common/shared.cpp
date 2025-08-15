@@ -1,4 +1,4 @@
-#include "shared.h"
+#include <common/shared.h>
 
 namespace BSP {
     std::mutex plot_mtx;
@@ -30,6 +30,6 @@ namespace BSP {
         {"None",     0}
     };
 
-    constexpr size_t baud_rates_size = sizeof(baud_rates) / sizeof(*baud_rates);
-    constexpr size_t baud_time_size  = sizeof(time_windows) / sizeof(*time_windows);
+    constexpr size_t baud_rates_size    = sizeof(baud_rates) / sizeof(*baud_rates);
+    constexpr size_t time_windows_size  = sizeof(time_windows) / sizeof(*time_windows);
 }
