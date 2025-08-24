@@ -25,6 +25,7 @@ namespace BSP {
 
     class Telemetry {
         private:
+
             std::string frame_fragments;
 
             std::vector<double> times_unix;
@@ -52,7 +53,7 @@ namespace BSP {
 
             void clearIncompleteChunk() { frame_fragments = ""; }
 
-            void    set_start_time()      { start_time = std::chrono::system_clock::now(); };
+            void    set_start_time() { start_time = std::chrono::system_clock::now(); };
             double  get_start_time() const;
 
             inline std::unordered_map<int, PlotData>* getData()                { return &data; }
@@ -63,7 +64,7 @@ namespace BSP {
 
             static std::string format_special_chars(const char* s);
 
-            void dump_data(std::string path) const;
+            void dump_data(std::string path, Limits limits, PlotTimeStyle ts = ELAPSED) const;
 
             bool is_empty() const;
             void clearValues();

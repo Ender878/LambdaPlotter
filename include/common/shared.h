@@ -20,10 +20,23 @@ namespace BSP {
         const int   value;
     } combobox_tuple_t;
 
+    typedef struct Limits {
+        double x_min;
+        double x_max;
+
+        double y_min;
+        double y_max;
+    } Limits;
+
     typedef enum app_state_t {
         READING,
         IDLE,
     } app_state_t;
+
+    typedef enum PlotTimeStyle {
+        DATETIME,
+        ELAPSED
+    } PlotTimeStyle;
 
     extern const combobox_tuple_t baud_rates[];
     extern const combobox_tuple_t time_windows[];

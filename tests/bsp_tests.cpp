@@ -1,11 +1,12 @@
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstring>
 #include <deque>
 #include <gtest/gtest.h>
 #include <BSP/telemetry.h>
+#include <iterator>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <termios.h>
 #include <thread>
@@ -135,18 +136,33 @@ TEST(BSP_Test, special_chars_formatting) {
     EXPECT_EQ(res, "Hello\n");
 }
 
-TEST(BSP_Test, SIGSEV) {
-    std::string str = "NumberOne:0,NumberTwo:-3";
+TEST(BSP_Test, dump_test) {
+    std::vector<double> vec      = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12 };
+    std::vector<double> expected = { 9, 10 };
+    std::vector<double> res;
 
-    try {
-        double x = std::stod(str);
+    double min_x = 9;
+    double max_x = 11;
 
-        EXPECT_EQ(x, 0);
-    } catch (const std::invalid_argument& e) {
-        
+    auto min_it = std::lower_bound(vec.begin(), vec.end(), min_x);
+    auto max_it = std::upper_bound(vec.begin(), vec.end(), max_x);
+
+    // check if found min is within the range
+    if (min_it != vec.end() && *min_it < min_x || *min_it > max_x) {
+        min_it = vec.end();
     }
-    
-    EXPECT_EQ(1, 0);
+
+    max_it = std::prev(max_it);
+
+    if (min_it != vec.end() && max_it != vec.end()) {
+        for (auto i = min_it; i <= max_it; i++) {
+            res.push_back(*i);
+        }
+    }
+
+    EXPECT_EQ(res, expected);
+    EXPECT_EQ(*min_it, 9);
+    EXPECT_EQ(*max_it, 10);
 }
 
 int main(int argc, char** argv) {

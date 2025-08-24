@@ -9,11 +9,6 @@ namespace BSP {
     typedef void (*PlotFunc)(const char*, const double*, const double*, int, int, int, int);
     typedef int key_t;
 
-    typedef enum PlotTimeStyle {
-        DATETIME,
-        ELAPSED
-    } PlotTimeStyle;
-
     typedef struct ChannelStyle {
         size_t combobox_func_index = 0;
         ImVec4 color;
@@ -22,6 +17,7 @@ namespace BSP {
 
     typedef struct PlotStyle {
         PlotTimeStyle time_style = DATETIME;
+        Limits    limits;
     } PlotStyle;
 
     typedef struct plot_functions_t {
@@ -54,6 +50,8 @@ namespace BSP {
             void renderPlotOptions();
 
             void renderDataFormat(Telemetry& tel, app_state_t app_state);
+
+            PlotStyle getPlotStyle() { return plot_style; }
     };
 }
 

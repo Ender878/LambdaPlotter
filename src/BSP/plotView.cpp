@@ -52,10 +52,14 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
                     if (app_state == READING)
                         ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
 
-                    // ImPlotRect limits = ImPlot::GetPlotLimits(ImAxis_X1);
-                    // std::println("{} - {}", limits.Min().x, limits.Max().x);
-
-                    // std::println("{}", int((last_time - first_time) * 1000));
+                    // get plot window limits and set the time window (used when saving the plot)
+                    ImPlotRect limits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+                    plot_style.limits = {
+                        limits.Min().x,
+                        limits.Max().x,
+                        limits.Min().y,
+                        limits.Max().y
+                    };
 
                     for (const auto& stream : *data) {
                         auto data_id = stream.first;
@@ -327,7 +331,7 @@ void BSP::PlotView::renderDataFormat(Telemetry& tel, app_state_t app_state) {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
-        ImGui::Text("Separator:");
+        ImGui::Text("Channel Separator:");
 
         ImGui::TableNextColumn();
 
@@ -335,7 +339,7 @@ void BSP::PlotView::renderDataFormat(Telemetry& tel, app_state_t app_state) {
             ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0, 0.0f, 0.0f, 1.0f));
         }
 
-        ImGui::InputText("##sep", tel.frame_format.channel_sep, sizeof(tel.frame_format.channel_sep));
+        ImGui::InputText("##channel_sep", tel.frame_format.channel_sep, sizeof(tel.frame_format.channel_sep));
         tel.frame_format.channel_sep[sizeof(tel.frame_format.channel_sep) - 1] = '\0';
 
         if (same_str_channel_sep) {

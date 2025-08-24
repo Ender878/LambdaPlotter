@@ -75,7 +75,7 @@ void BSP::Controller::saveFile() {
     std::string path = BSP::Window::saveFileDialog(default_file_name.c_str());
 
     if (!path.empty()) {
-        tel.dump_data(path);
+        tel.dump_data(path, plot_view.getPlotStyle().limits, plot_view.getPlotStyle().time_style);
     }
 }
 
@@ -115,8 +115,7 @@ void BSP::Controller::startSerialReading(std::string port, size_t baud) {
                         std::lock_guard<std::mutex> lock(BSP::plot_mtx);
                         tel.parse_frame(frame_stream);
                     }
-
-                    // tel.processData(buffer);
+                    
                 } else {
                     Serial::setLastOpenPort("");
                     curr_app_state = IDLE;

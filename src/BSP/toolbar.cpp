@@ -50,7 +50,6 @@ void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::v
     // get prev selected port and baud rate
     const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() ? serial_ports[combobox_port_index.value()].c_str() : "";
     const char* selected_baud = BSP::baud_rates[combobox_baud_index].str;
-    // const char* time = BSP::time_windows[combobox_time_index].str;
 
     ImGui::SeparatorText("Serial interface");
 

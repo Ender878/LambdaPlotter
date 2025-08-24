@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <common/shared.h>
 #include <BSP/telemetry.h>
 #include <chrono>
@@ -9,6 +10,7 @@
 #include <format>
 #include <fstream>
 #include <iomanip>
+#include <iterator>
 #include <mutex>
 #include <print>
 #include <regex>
@@ -42,7 +44,7 @@ std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
         // if it has been found, there is a valid frame. Update frame_stream.
         // if there is no token, append the characters to the fragment string
         if (frame_end_i != std::string::npos) {
-            frame_stream += frame_fragments + buffer_str.substr(last_frame_end_i, frame_end_i - last_frame_end_i + frame_end_len);
+            frame_stream    += frame_fragments + buffer_str.substr(last_frame_end_i, frame_end_i - last_frame_end_i + frame_end_len);
             frame_fragments = "";
         } else {
             frame_fragments += buffer_str.substr(last_frame_end_i, buffer_str.length());
@@ -161,76 +163,6 @@ int BSP::Telemetry::get_elapsed_time() {
     return int((now - start_time) * 1000);
 }
 
-// void BSP::Telemetry::processData(std::vector<char>& buffer) {
-//     // filtered data chunks to be processed and plotted
-//     std::string data_frame = "";
-
-//     // add '\0` to the end of the buffer to make it a valid string
-//     buffer.push_back('\0');
-//     std::string buf_str = buffer.data();
-
-//     // iter every character received from the buffer and for every '\n'
-//     // encountered, add all the characters before it to the `plot_data` string,
-//     // which will be processed and casted to be ready to be plotted.
-//     for (const auto &c : buf_str) {
-//         frame_fragments += c;
-
-//         if (c == '\n') {
-//             data_frame += frame_fragments;
-//             frame_fragments = "";
-//         }
-//     }
-
-//     if (!data_frame.empty()) {
-//         std::stringstream data_frame_stream(data_frame);
-//         std::string data_chunk;
-
-//         // std::println("{}", data_frame);
-
-//         // lock the thread while the plot data is updated
-//         std::lock_guard<std::mutex> lock(BSP::plot_mtx);
-//         while (std::getline(data_frame_stream, data_chunk, '\n')) {
-//             dataFormatSpaces(data_chunk);
-
-//             // if (times.size() > max_size) {
-
-//             //     for (auto& stream : data) {
-//             //         stream.second.values.erase(stream.second.values.begin());
-//             //     }
-
-//             //     times.erase(times.begin());
-//             // }
-//         }
-//     }
-// }
-
-// void BSP::Telemetry::dataFormatSpaces(const std::string& data_chunk) {
-//     std::stringstream data_chunk_stream(data_chunk);
-//     std::string value;
-//     size_t i = 1;
-
-//     while (std::getline(data_chunk_stream, value, ' ')) {
-//         if (!data.contains(i)) {
-//             data[i].name   = std::format("Data {}", i);
-//             data[i].scale  = 1.0f;
-//             data[i].offset = 0.0f;
-//         }
-
-//         try {
-//             data[i].values.push_back(std::stod(value) * data[i].scale + data[i].offset);
-//         } catch (const std::exception &e) {
-//             data[i].values.push_back(NAN);
-//         }
-
-//         i++;
-//     }
-
-//     // set the time point only if something has been read
-//     if (i > 1) {
-//         times.push_back(getUnixTimestamp());
-//     }
-// }
-
 double BSP::Telemetry::get_start_time() const {
     return std::chrono::duration<double>(start_time.time_since_epoch()).count();
 }
@@ -244,13 +176,18 @@ void BSP::Telemetry::clearValues() {
 
     times_unix.clear();
     times_elapsed.clear();
+
+    set_start_time();
 }
 
 void BSP::Telemetry::clear() {
     frame_fragments = "";
+
     data.clear();
     times_unix.clear();
     times_elapsed.clear();
+
+    set_start_time();
 }
 
 double BSP::Telemetry::get_unix_time() {
@@ -259,50 +196,66 @@ double BSP::Telemetry::get_unix_time() {
     return std::chrono::duration<double>(now.time_since_epoch()).count();
 }
 
-// TODO: save only time window.
-void BSP::Telemetry::dump_data(std::string path) const {
-    // size_t i = 0;
-    // std::ofstream dump(path);
+void BSP::Telemetry::dump_data(std::string path, Limits limits, PlotTimeStyle ts) const {
+    std::ofstream dump(path);
 
-    // if (!dump.is_open()) {
-    //     std::println(stderr, "Error while opening dump file.");
-    //     return;
-    // }
+    const auto& times = (ts == DATETIME) ? times_unix : times_elapsed;
 
-    // std::print(dump, "times");
+    // check if the file was opened correctly
+    if (!dump.is_open()) {
+        std::println(stderr, "Error while opening dump file.");
+        return;
+    }
 
-    // std::lock_guard<std::mutex> lock(BSP::plot_mtx);
-    // for (const auto& el : data) {
-    //     std::print(dump, ";{}", el.second.name);
-    // }
-    // std::println(dump);
+    // === write labels ===
+    std::print(dump, "times");
 
-    // for (const auto& t : times) {
-    //     std::print(dump, "{}", formatUnixTimestamp(t));
+    std::lock_guard<std::mutex> lock(BSP::plot_mtx);
+    for (const auto& el : data) {
+        std::print(dump, ";{}", el.second.name);
+    }
+    std::println(dump);
 
-    //     for (const auto& el : data) {
-    //         std::string el_str = "";
+    // get time window
+    auto min_x_it = std::lower_bound(times.begin(), times.end(), limits.x_min);
+    auto max_x_it = std::upper_bound(times.begin(), times.end(), limits.x_max);
 
-    //         if (i <= times.size() - 1 && i <= el.second.values.size() - 1) {
-    //             el_str = std::format("{}", el.second.values.at(i));
-    //         }
+    // check if found min is within the range
+    if (min_x_it != times.end() && *min_x_it < limits.x_min || *min_x_it > limits.x_max) {
+        min_x_it = times.end();
+    }
 
-    //         std::print(dump, ";{}", el_str);
-    //     }
-    //     std::println(dump);
-    //     i++;
-    // }
+    max_x_it = std::prev(max_x_it);
 
-    // std::println("Dump done!!");
+    // write data to file
+    for (auto it = min_x_it; it <= max_x_it; it++) {
+        std::print(dump, "{}", (ts == DATETIME) ? formatUnixTimestamp(*it) : std::format("{:.0f}", *it));
 
-    // dump.close();
+        for (const auto& el : data) {
+            size_t data_i = std::distance(times.begin(), it);
+            std::string el_str = "";
+
+            if (data_i < el.second.values.size()) {
+                auto val = el.second.values.at(data_i);
+                
+                if (val >= limits.y_min && val <= limits.y_max) {
+                    el_str = std::to_string(el.second.values.at(data_i));
+                }
+            }
+
+            std::print(dump, ";{}", el_str);     
+        }
+        std::println(dump);
+    }
+    std::println("Dump done!!");
+
+    dump.close();
 }
 
 std::string BSP::Telemetry::formatUnixTimestamp(double unix_timestamp) {
     // get time from system clock
     time_t time = static_cast<time_t>(unix_timestamp);
 
-    // convert time to `tm` struct
     std::tm tm = *std::localtime(&time);
 
     // format the string
