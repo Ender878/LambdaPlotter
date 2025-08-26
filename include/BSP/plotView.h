@@ -7,7 +7,6 @@
 
 namespace BSP {
     typedef void (*PlotFunc)(const char*, const double*, const double*, int, int, int, int);
-    typedef int key_t;
 
     typedef struct ChannelStyle {
         size_t combobox_func_index = 0;
@@ -17,7 +16,7 @@ namespace BSP {
 
     typedef struct PlotStyle {
         PlotTimeStyle time_style = DATETIME;
-        Limits    limits;
+        Limits        limits;
     } PlotStyle;
 
     typedef struct plot_functions_t {
@@ -31,15 +30,15 @@ namespace BSP {
     // `PlotView` is the class responsible of the UI components regarding data plotting and it's settings.
     class PlotView {
         private:
-            std::unordered_map<key_t, ChannelStyle> plot_attributes;
+            std::unordered_map<int, ChannelStyle> plot_attributes;
             PlotStyle plot_style;
             size_t    combobox_time_index;
             bool      clear_button;
 
             // initialize a new plot line style with key `id`, or overwrite if the key exists
-            void channelStyleInit(key_t id);
+            void channelStyleInit(int id);
             
-            void renderChannelSettings(key_t id, PlotData& data, ChannelStyle& style);
+            void renderChannelSettings(int id, Channel& data, ChannelStyle& style);
         public:
             PlotView() : combobox_time_index(2), clear_button(false) {}
 
@@ -52,6 +51,7 @@ namespace BSP {
             void renderDataFormat(Telemetry& tel, app_state_t app_state);
 
             PlotStyle getPlotStyle() { return plot_style; }
+            std::unordered_map<int, ChannelStyle> getChannelStyles() { return plot_attributes; }
     };
 }
 

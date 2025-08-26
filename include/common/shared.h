@@ -4,8 +4,8 @@
 #include <mutex>
 #include <termios.h>
 
-#define MIN_WIN_WIDTH  1400
-#define MIN_WIN_HEIGHT 800
+#define MIN_WIN_WIDTH  1375
+#define MIN_WIN_HEIGHT 700
 
 #define THREAD_READ_DELAY 5 // ms
 

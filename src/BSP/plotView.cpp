@@ -17,8 +17,8 @@
 void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height) {
     std::lock_guard<std::mutex> lock(BSP::plot_mtx);
 
-    const std::vector<double>* times = (plot_style.time_style == DATETIME) ? tel.get_unix_timestamps() : tel.get_elapsed_timestamps();
-    const auto* data = tel.getData();
+    std::vector<double>* times = (plot_style.time_style == DATETIME) ? tel.get_unix_timestamps() : tel.get_elapsed_timestamps();
+    auto* data = tel.getData();
 
     ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
     ImGui::SetNextWindowSize(ImVec2(width, height));
@@ -49,7 +49,7 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
                         ? std::max(first_time, last_time - time_window)
                         : first_time;
     
-                    if (app_state == READING)
+                    if (app_state == READING) // TODO: fix time format change
                         ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
 
                     // get plot window limits and set the time window (used when saving the plot)
@@ -61,22 +61,33 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
                         limits.Max().y
                     };
 
-                    for (const auto& stream : *data) {
-                        auto data_id = stream.first;
+                    for (auto& stream : *data) {
+                        auto  data_id = stream.first;
+                        auto& channel = stream.second;
 
                         if (!plot_attributes.contains(data_id)) {
                             channelStyleInit(data_id);
                         }
 
                         if (plot_attributes[data_id].show) {
-                            std::string label = std::format("{}##{}", stream.second.name, stream.first);
-                            
+                            std::string label = std::format("{}##{}", channel.name, data_id);
+
                             ImPlot::PushStyleColor(ImPlotCol_Line, plot_attributes[data_id].color);
                             ImPlot::PushStyleColor(ImPlotCol_Fill, plot_attributes[data_id].color);
 
-                            plot_functions[plot_attributes[data_id].combobox_func_index].func(label.c_str(), times->data(), stream.second.values.data(), stream.second.values.size(), 0, stream.second.offset, sizeof(double));
+                            if (channel.offset != channel.prev_offset || channel.scale != channel.prev_scale) {
+                                channel.values_transformed.clear();
+                                for (size_t i = 0; i < channel.values.size(); i++) {
+                                    channel.values_transformed.push_back((channel.values[i] * channel.scale) + channel.offset);
+                                }
+                            }
 
-                            ImPlot::PopStyleColor();
+                            channel.prev_offset = channel.offset;
+                            channel.prev_scale  = channel.scale;
+
+                            plot_functions[plot_attributes[data_id].combobox_func_index].func(label.c_str(), times->data(), channel.values_transformed.data(), channel.values.size(), 0, 0, sizeof(double));
+
+                            ImPlot::PopStyleColor(2);
                         }
                     }
 
@@ -144,8 +155,8 @@ void BSP::PlotView::renderTelemetryToolbar(Telemetry& tel) {
     
                 ImGui::TableNextColumn();
     
-                if (!data.second.values.empty()) {
-                    ImGui::Text("%.2f", data.second.values.back());
+                if (!data.second.values_transformed.empty()) {
+                    ImGui::Text("%.2f", data.second.values_transformed.back());
                 }
                 
                 ImGui::TableNextColumn();
@@ -246,7 +257,7 @@ void BSP::PlotView::channelStyleInit(key_t id) {
     };
 }
 
-void BSP::PlotView::renderChannelSettings(key_t id, PlotData& data, ChannelStyle& style) {
+void BSP::PlotView::renderChannelSettings(key_t id, Channel& data, ChannelStyle& style) {
     if (ImGui::BeginPopup(("##ChannelConfig" + std::to_string(id)).c_str())) {
         ImGui::Text("Channel '%s'", data.name.c_str());
         ImGui::Separator();

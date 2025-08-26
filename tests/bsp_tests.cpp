@@ -165,6 +165,19 @@ TEST(BSP_Test, dump_test) {
     EXPECT_EQ(*max_it, 10);
 }
 
+TEST(BSP_Test, regex_test) {
+    BSP::Telemetry tel;
+
+    std::string frame1 = "10 4033 1200\n";
+    std::string frame2 = "x:-10 y:20 z:-10.233\n";
+
+    ASSERT_TRUE(tel.validate_frame(frame1));
+
+    tel.frame_format.named = true;
+
+    ASSERT_TRUE(tel.validate_frame(frame2));
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

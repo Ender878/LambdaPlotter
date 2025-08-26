@@ -1,3 +1,4 @@
+#include "BSP/plotView.h"
 #include <algorithm>
 #include <common/shared.h>
 #include <BSP/telemetry.h>
@@ -17,6 +18,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 BSP::Telemetry::Telemetry(size_t t_max_size) 
@@ -59,6 +61,8 @@ std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
 }
 
 void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
+    if (!validate_frame(frame_stream)) return;
+
     std::string frame_end   = Telemetry::format_special_chars(frame_format.frame_end);
     std::string channel_sep = Telemetry::format_special_chars(frame_format.channel_sep);
     std::string name_sep    = Telemetry::format_special_chars(frame_format.name_sep);
@@ -115,10 +119,11 @@ void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
                         data[id].scale  = 1.0f;
                         data[id].offset = 0.0f;
                     }
-                    
+
                     // push the value
                     try {
-                        data[id].values.push_back(std::stod(value) * data[id].scale + data[id].offset);
+                        data[id].values.push_back(std::stod(value));
+                        data[id].values_transformed.push_back(std::stod(value) * data[id].scale + data[id].offset);
                     } catch (const std::invalid_argument &e) {
                         data[id].values.push_back(NAN);
                     }
@@ -142,6 +147,37 @@ void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
             ? frame_end_i
             : frame_end_i + frame_end_len;
     } while (last_frame_end_i != std::string::npos);
+}
+
+bool BSP::Telemetry::validate_frame(const std::string& frame_stream) {
+    static const char* value_pattern     = R"((-?\d+\.?\d*))";
+    static const char* name_pattern      = R"((.+))";
+    static std::string frame_end_pattern = std::format(R"({})", frame_format.frame_end);
+    
+    std::string frame_pattern;
+
+    // Full pattern: (?:{name}{nsep}{val}(?:{csep}{name}{nsep}{val})*{fend})+
+    if (frame_format.named) {
+        frame_pattern = std::format(
+            R"((?:{0}{1}{2}(?:{3}{0}{1}{2})*{4})+)",
+            name_pattern,
+            frame_format.name_sep,
+            value_pattern,
+            frame_format.channel_sep,
+            frame_format.frame_end
+        );
+    } else {
+        frame_pattern = std::format(
+            R"((?:{0}(?:{1}{0})*{2})+)",
+            value_pattern,
+            frame_format.channel_sep,
+            frame_format.frame_end
+        );
+    }
+
+    std::regex frame_rgx(frame_pattern);
+
+    return std::regex_match(frame_stream, frame_rgx);
 }
 
 std::string BSP::Telemetry::format_special_chars(const char* s) {
@@ -196,7 +232,7 @@ double BSP::Telemetry::get_unix_time() {
     return std::chrono::duration<double>(now.time_since_epoch()).count();
 }
 
-void BSP::Telemetry::dump_data(std::string path, Limits limits, PlotTimeStyle ts) const {
+void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_map<int, ChannelStyle> ch_styles, PlotTimeStyle ts) const {
     std::ofstream dump(path);
 
     const auto& times = (ts == DATETIME) ? times_unix : times_elapsed;
@@ -212,7 +248,7 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, PlotTimeStyle ts
 
     std::lock_guard<std::mutex> lock(BSP::plot_mtx);
     for (const auto& el : data) {
-        std::print(dump, ";{}", el.second.name);
+        if (ch_styles[el.first].show) std::print(dump, ";{}", el.second.name);
     }
     std::println(dump);
 
@@ -232,14 +268,16 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, PlotTimeStyle ts
         std::print(dump, "{}", (ts == DATETIME) ? formatUnixTimestamp(*it) : std::format("{:.0f}", *it));
 
         for (const auto& el : data) {
+            if (!ch_styles[el.first].show) continue;
+            
             size_t data_i = std::distance(times.begin(), it);
             std::string el_str = "";
 
-            if (data_i < el.second.values.size()) {
-                auto val = el.second.values.at(data_i);
+            if (data_i < el.second.values_transformed.size()) {
+                auto val = el.second.values_transformed.at(data_i);
                 
                 if (val >= limits.y_min && val <= limits.y_max) {
-                    el_str = std::to_string(el.second.values.at(data_i));
+                    el_str = std::to_string(el.second.values_transformed.at(data_i));
                 }
             }
 

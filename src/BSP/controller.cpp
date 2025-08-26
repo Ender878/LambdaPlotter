@@ -75,7 +75,7 @@ void BSP::Controller::saveFile() {
     std::string path = BSP::Window::saveFileDialog(default_file_name.c_str());
 
     if (!path.empty()) {
-        tel.dump_data(path, plot_view.getPlotStyle().limits, plot_view.getPlotStyle().time_style);
+        tel.dump_data(path, plot_view.getPlotStyle().limits, plot_view.getChannelStyles(), plot_view.getPlotStyle().time_style);
     }
 }
 
