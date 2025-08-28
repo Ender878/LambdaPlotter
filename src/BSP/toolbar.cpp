@@ -1,13 +1,14 @@
 #include <BSP/toolbar.h>
 #include <BSP/serial.h>
 #include "../fonts/lucide.h"
+#include "BSP/shared.h"
 
 #include <imgui.h>
 #include <algorithm>
 #include <string>
 #include <vector>
 
-void BSP::ToolBar::updateSerialPorts(const std::vector<std::string> &serial_ports) {
+void BSP::ToolBar::update_serial_ports(const std::vector<std::string> &serial_ports) {
     if (refresh_button) {
         // if the port list is empty, but the list index has a value, set the
         // index to null
@@ -29,13 +30,13 @@ void BSP::ToolBar::updateSerialPorts(const std::vector<std::string> &serial_port
     current_port = combobox_port_index.has_value() ? serial_ports[combobox_port_index.value()] : "";
 }
 
-BSP::app_state_t BSP::ToolBar::getAppState(const app_state_t &curr_app_state) const {
+BSP::app_state_t BSP::ToolBar::get_new_app_state(const app_state_t &curr_app_state) const {
     app_state_t state = curr_app_state;
 
     if (open_close_button) {
         // if we are not already reading and there is a port selected, start
-        // reading. if we are reading and the button has been pressed, stop
-        // reading.
+        // reading. if we are reading and the connection button has 
+        // been pressed, stop reading.
         if (combobox_port_index.has_value() && curr_app_state == IDLE) {
             state = READING;
         } else if (curr_app_state == READING) {
@@ -48,7 +49,9 @@ BSP::app_state_t BSP::ToolBar::getAppState(const app_state_t &curr_app_state) co
 
 void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::vector<std::string>& serial_ports) {
     // get prev selected port and baud rate
-    const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() ? serial_ports[combobox_port_index.value()].c_str() : "";
+    const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() 
+        ? serial_ports[combobox_port_index.value()].c_str() 
+        : "";
     const char* selected_baud = BSP::baud_rates[combobox_baud_index].str;
 
     ImGui::SeparatorText("Serial interface");
@@ -85,7 +88,7 @@ void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::v
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 5);
         if (ImGui::BeginCombo("##baud", selected_baud)) {
-            for (size_t i = 0; i < BSP::baud_rates_size; i++) {
+            for (size_t i = 0; i < BSP::baud_rates.size(); i++) {
                 bool selected = combobox_baud_index == i;
 
                 if (ImGui::Selectable(BSP::baud_rates[i].str, selected)) {

@@ -1,4 +1,4 @@
-# BETTER SERIAL PLOTTER
+# Better Serial Plotter
 
 ![Better Serial Plotter Screenshot](./assets/plot.png)
 
@@ -8,11 +8,10 @@
 
 ```bash
 CC=clang CXX=clang++ PKG_CONFIG_PATH=/usr/lib/pkgconfig conan install . --output-folder=build --build=missing -s build_type=<Debug|Release>
-
 ```
 
 ## TODO
 
-- [ ] Binary format
+- [ ] Binary formatting
 - [ ] UDP support
 - [ ] serial monitor + serial writing

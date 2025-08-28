@@ -1,20 +1,20 @@
 #ifndef __BSP_SHARED_H__
 #define __BSP_SHARED_H__
 
-#include <mutex>
+#include <array>
 #include <termios.h>
 
-#define MIN_WIN_WIDTH  1375
-#define MIN_WIN_HEIGHT 700
+#define MIN_WIN_WIDTH           1375
+#define MIN_WIN_HEIGHT          700
 
-#define THREAD_READ_DELAY 5 // ms
+#define THREAD_READ_DELAY       5
 
-#define DATA_MAX_SIZE 100000
+#define DATA_MAX_SIZE           100000
+
+#define BAUD_RATES_SIZE         11
+#define TIME_WINDOWS_SIZE       9 
 
 namespace BSP {
-    extern std::mutex plot_mtx;
-    extern std::mutex thread_mtx;
-
     typedef struct combobox_tuple_t {
         const char* str;
         const int   value;
@@ -38,11 +38,8 @@ namespace BSP {
         ELAPSED
     } PlotTimeStyle;
 
-    extern const combobox_tuple_t baud_rates[];
-    extern const combobox_tuple_t time_windows[];
-
-    extern const size_t baud_rates_size;
-    extern const size_t time_windows_size;
+    extern const std::array<combobox_tuple_t, BAUD_RATES_SIZE>    baud_rates;
+    extern const std::array<combobox_tuple_t, TIME_WINDOWS_SIZE>  time_windows;
 }
 
 #endif

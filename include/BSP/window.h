@@ -13,8 +13,6 @@ struct ImGuiStyle;
 struct ImPlotStyle;
 
 namespace BSP {
-    constexpr ImGuiWindowFlags MAIN_WIN_FLAGS = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
-
     class Window {
         private: 
             static GLFWwindow*  window;
@@ -29,25 +27,43 @@ namespace BSP {
             static void loadDefaultFont();
             static void loadIconFont();
         public:
+            /**
+             * @brief Initialize the GLFW window
+             * 
+             * @param t_width  initial window width
+             * @param t_height initial window height
+             * @param title    window title
+             */
             static void init(int t_width, int t_height, const char* title);
 
-            static bool renderMainWindow(std::function<void()> content);
+            /**
+             * @brief Render the application's main loop
+             * 
+             * @param content lamba containing the window's content
+             * @return true   if the app should run
+             * @return false  if the app should close
+             */
+            static bool render_mainloop(std::function<void()> content);
 
-            static void renderMenuBar(std::function<void()> content);
+            /**
+             * @brief Render the application's toolbar
+             * 
+             * @param content lamba containing the toolbar content
+             */
+            static void render_toolbar(std::function<void()> content);
 
-            static void renderToolBar(ToolBar& tb, const std::vector<std::string>& serial_ports, app_state_t app_state, bool is_dataset_empty);
+            /**
+             * @brief Render the Save file dialog
+             * 
+             * @param default_path default save path
+             * @return select save path
+             */
+            static std::string render_save_fd(const char* default_path);
 
-            // TODO
-            static void renderSerialConf(bool enabled);
-
-            static void renderTelemetry();
-
-            static void renderPlotConf(); 
-
-            static void renderPlot(const Telemetry& tel, const size_t time_window_index, const app_state_t app_state);
-
-            static std::string saveFileDialog(const char* default_path);
-
+            /**
+             * @brief GLFW window close calls
+             * 
+             */
             static void destroy();
 
             static ImVec2 getWindowSize();

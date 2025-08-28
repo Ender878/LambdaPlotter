@@ -5,15 +5,19 @@
 #include <imgui.h>
 #include <unordered_map>
 
+#define PLOT_FUNC_SIZE 3
+
 namespace BSP {
     typedef void (*PlotFunc)(const char*, const double*, const double*, int, int, int, int);
 
+    // struct storing channels' plot style
     typedef struct ChannelStyle {
         size_t combobox_func_index = 0;
         ImVec4 color;
         bool   show;
     } ChannelStyle;
 
+    // general plot attributes
     typedef struct PlotStyle {
         PlotTimeStyle time_style = DATETIME;
         Limits        limits;
@@ -24,8 +28,7 @@ namespace BSP {
         PlotFunc    func;
     } plot_functions_t;
 
-    extern const plot_functions_t plot_functions[];
-    extern const size_t           plot_functions_size;
+    extern const std::array<plot_functions_t, PLOT_FUNC_SIZE> plot_functions;
 
     // `PlotView` is the class responsible of the UI components regarding data plotting and it's settings.
     class PlotView {
@@ -35,23 +38,77 @@ namespace BSP {
             size_t    combobox_time_index;
             bool      clear_button;
 
-            // initialize a new plot line style with key `id`, or overwrite if the key exists
-            void channelStyleInit(int id);
+            /**
+             * @brief initialize a new channel plot style with key `id`, or overwrite it if the key already exists
+             * 
+             * @param id channel id
+             */
+            void channel_style_init(int id);
             
-            void renderChannelSettings(int id, Channel& data, ChannelStyle& style);
+            /**
+             * @brief Renders a pop-up containing various channel configuration widgets
+             * 
+             * @param id    channel id
+             * @param data  channel
+             * @param style channel style
+             */
+            void render_channel_settings(int id, Channel& data, ChannelStyle& style);
+
+            /**
+             * @brief Render a tooltip hoverable widget containing text
+             * 
+             * @param message the string to be displayed
+             */
+            void render_tooltip(const char* message);
         public:
             PlotView() : combobox_time_index(2), clear_button(false) {}
 
-            void renderPlot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height);
+            /**
+             * @brief Render the plot
+             * 
+             * @param tel         Reference to a telemetry object containing all the channel's data
+             * @param app_state   The current app state (READING or IDLE)
+             * @param pos_x       X position for the plot window
+             * @param pos_y       Y position fot the plot window
+             * @param width       
+             * @param height 
+             */
+            void render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height);
 
-            void renderTelemetryToolbar(Telemetry& tel);
+            /**
+             * @brief Render widgets used to interact and read received data 
+             * 
+             * @param tel Telemetry object containing all the channels' data
+             */
+            void render_telemetry(Telemetry& tel);
 
-            void renderPlotOptions();
+            /**
+             * @brief Render widgets used for changing general plot options
+             * 
+             */
+            void render_plot_options();
 
-            void renderDataFormat(Telemetry& tel, app_state_t app_state);
+            /**
+             * @brief Render the form used to create the data frame format
+             * 
+             * @param tel       Telemetry object containing all the channels' data
+             * @param app_state The current app state (READING or IDLE)
+             */
+            void render_data_format(Telemetry& tel, app_state_t app_state);
 
-            PlotStyle getPlotStyle() { return plot_style; }
-            std::unordered_map<int, ChannelStyle> getChannelStyles() { return plot_attributes; }
+            /**
+             * @brief Get the plot style object
+             * 
+             * @return PlotStyle 
+             */
+            PlotStyle get_plot_style() { return plot_style; }
+
+            /**
+             * @brief Get the channels style object
+             * 
+             * @return std::unordered_map<int, ChannelStyle> 
+             */
+            std::unordered_map<int, ChannelStyle> get_channels_style() { return plot_attributes; }
     };
 }
 

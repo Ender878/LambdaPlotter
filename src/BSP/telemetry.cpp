@@ -1,6 +1,6 @@
 #include "BSP/plotView.h"
 #include <algorithm>
-#include <common/shared.h>
+#include <BSP/shared.h>
 #include <BSP/telemetry.h>
 #include <chrono>
 #include <cmath>
@@ -21,8 +21,8 @@
 #include <unordered_map>
 #include <vector>
 
-BSP::Telemetry::Telemetry(size_t t_max_size) 
-    : start_time(std::chrono::system_clock::now()), max_size(t_max_size), frame_fragments("") {}
+BSP::Telemetry::Telemetry() 
+    : start_time(std::chrono::system_clock::now()), frame_fragments("") {}
 
 std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
     // char buffer to valid string
@@ -61,123 +61,66 @@ std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
 }
 
 void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
-    if (!validate_frame(frame_stream)) return;
+    auto it_end = std::sregex_iterator();
 
     std::string frame_end   = Telemetry::format_special_chars(frame_format.frame_end);
     std::string channel_sep = Telemetry::format_special_chars(frame_format.channel_sep);
     std::string name_sep    = Telemetry::format_special_chars(frame_format.name_sep);
 
-    // calc token length
-    size_t frame_end_len    = frame_end.length();
-    size_t channel_end_len  = channel_sep.length();
-    size_t name_sep_len     = name_sep.length();
+    // regex to find single frames
+    std::string frame_pattern = std::format("(.+{})", frame_end);
+    std::string value_pattern;
 
-    // last frame end token index
-    size_t last_frame_end_i = 0;
-
-    do {
-        // find the next frame end token
-        size_t frame_end_i = frame_stream.find(frame_end, last_frame_end_i);
-
-        // if found, get the current frame
-        if (frame_end_i != std::string::npos) {
-            std::string frame = frame_stream.substr(last_frame_end_i, frame_end_i - last_frame_end_i);
-
-            // last channel sep token index
-            size_t last_channel_sep_i = 0;
-            // channel id
-            size_t id = 1;
-
-            do {
-                // find the next channel separator
-                size_t channel_sep_i = frame.find(channel_sep, last_channel_sep_i);
-                
-                // get the channel
-                std::string channel = frame.substr(last_channel_sep_i, (channel_sep_i != std::string::npos ? channel_sep_i : frame.length()) - last_channel_sep_i);
-                if (!channel.empty()) {
-                    // for default, the value of the channel is the channel itself,
-                    // this will change if the `named` field of the frame format is active.
-                    std::string value = channel;
-                    std::string name  = std::format("Data {}", id);
-
-                    if (frame_format.named) {
-                        // if the frame is named, read and find the name and the actual value
-                        size_t name_sep_i = channel.find(name_sep);
-
-                        // if for some reason the name separator is not present,
-                        // use the default values for `name` and `value`
-                        if (name_sep_i != std::string::npos) {
-                            name  = channel.substr(0, name_sep_i);
-                            value = channel.substr(name_sep_i + name_sep_len, channel.length());
-                        }
-                    }
-
-                    // push the default channel attributes
-                    // if they are not set
-                    if (!data.contains(id)) {
-                        data[id].name   = name;
-                        data[id].scale  = 1.0f;
-                        data[id].offset = 0.0f;
-                    }
-
-                    // push the value
-                    try {
-                        data[id].values.push_back(std::stod(value));
-                        data[id].values_transformed.push_back(std::stod(value) * data[id].scale + data[id].offset);
-                    } catch (const std::invalid_argument &e) {
-                        data[id].values.push_back(NAN);
-                    }
-
-                    id++;
-                }
-
-                last_channel_sep_i = (channel_sep_i == std::string::npos)
-                    ? channel_sep_i
-                    : channel_sep_i + channel_end_len;
-            } while (last_channel_sep_i != std::string::npos);
-
-            // set the time point only if something has been read
-            if (id > 1) {
-                times_unix.push_back(get_unix_time());
-                times_elapsed.push_back(get_elapsed_time());
-            }
-        }
-
-        last_frame_end_i = (frame_end_i == std::string::npos)
-            ? frame_end_i
-            : frame_end_i + frame_end_len;
-    } while (last_frame_end_i != std::string::npos);
-}
-
-bool BSP::Telemetry::validate_frame(const std::string& frame_stream) {
-    static const char* value_pattern     = R"((-?\d+\.?\d*))";
-    static const char* name_pattern      = R"((.+))";
-    static std::string frame_end_pattern = std::format(R"({})", frame_format.frame_end);
-    
-    std::string frame_pattern;
-
-    // Full pattern: (?:{name}{nsep}{val}(?:{csep}{name}{nsep}{val})*{fend})+
     if (frame_format.named) {
-        frame_pattern = std::format(
-            R"((?:{0}{1}{2}(?:{3}{0}{1}{2})*{4})+)",
-            name_pattern,
-            frame_format.name_sep,
-            value_pattern,
-            frame_format.channel_sep,
-            frame_format.frame_end
-        );
+        value_pattern = std::format(R"((.+?){}(.*?)(?:{}|{}))", name_sep, channel_sep, frame_end);
     } else {
-        frame_pattern = std::format(
-            R"((?:{0}(?:{1}{0})*{2})+)",
-            value_pattern,
-            frame_format.channel_sep,
-            frame_format.frame_end
-        );
+        value_pattern = std::format(R"((.+?)(?:{}|{}))", channel_sep, frame_end);
     }
 
+    // regexes for finding frames and values
     std::regex frame_rgx(frame_pattern);
+    std::regex value_rgx(value_pattern);
 
-    return std::regex_match(frame_stream, frame_rgx);
+    // iterate throught all the valid frames that matched the regex
+    auto frames_it_begin = std::sregex_iterator(frame_stream.begin(), frame_stream.end(), frame_rgx);
+    for (auto it_f = frames_it_begin; it_f != it_end; ++it_f) {
+        std::string frame = it_f->str();
+
+        size_t ch_id = 1;
+
+        // iterate throught all the valid values found in the frame that matched the regex
+        auto values_it_begin = std::sregex_iterator(frame.begin(), frame.end(), value_rgx);
+        for (auto it_v = values_it_begin; it_v != it_end; ++it_v) {
+            std::string name = frame_format.named
+                ? (*it_v)[1].str()
+                : std::format("Data {}", ch_id);
+            
+            std::string value = (*it_v)[frame_format.named ? 2 : 1].str();
+            
+            // if the channel doesn't exist, initialize it
+            if (!data.contains(ch_id)) {
+                data[ch_id].name   = name;
+                data[ch_id].scale  = 1.0f;
+                data[ch_id].offset = 0.0f;
+            }
+
+            // save the value
+            try {
+                data[ch_id].values.push_back(std::stod(value));
+                data[ch_id].values_transformed.push_back(std::stod(value) * data[ch_id].scale + data[ch_id].offset);
+            } catch (const std::invalid_argument &e) {
+                data[ch_id].values.push_back(NAN);
+            }
+
+            ch_id++;
+        }
+
+        // set the time point only if something has been read
+        if (ch_id > 1) {
+            times_unix.push_back(get_unix_time());
+            times_elapsed.push_back(get_elapsed_time());
+        }
+    }
 }
 
 std::string BSP::Telemetry::format_special_chars(const char* s) {
@@ -193,7 +136,7 @@ std::string BSP::Telemetry::format_special_chars(const char* s) {
 }
 
 int BSP::Telemetry::get_elapsed_time() {
-    double now = get_unix_time();
+    double now        = get_unix_time();
     double start_time = get_start_time();
 
     return int((now - start_time) * 1000);
@@ -203,7 +146,7 @@ double BSP::Telemetry::get_start_time() const {
     return std::chrono::duration<double>(start_time.time_since_epoch()).count();
 }
 
-void BSP::Telemetry::clearValues() {
+void BSP::Telemetry::clear_values() {
     frame_fragments = "";
 
     for (auto& el : data) {
@@ -246,7 +189,7 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_m
     // === write labels ===
     std::print(dump, "times");
 
-    std::lock_guard<std::mutex> lock(BSP::plot_mtx);
+    std::lock_guard<std::mutex> lock(data_mtx);
     for (const auto& el : data) {
         if (ch_styles[el.first].show) std::print(dump, ";{}", el.second.name);
     }
@@ -258,14 +201,14 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_m
 
     // check if found min is within the range
     if (min_x_it != times.end() && *min_x_it < limits.x_min || *min_x_it > limits.x_max) {
-        min_x_it = times.end();
+        min_x_it  = times.end();
     }
 
     max_x_it = std::prev(max_x_it);
 
     // write data to file
     for (auto it = min_x_it; it <= max_x_it; it++) {
-        std::print(dump, "{}", (ts == DATETIME) ? formatUnixTimestamp(*it) : std::format("{:.0f}", *it));
+        std::print(dump, "{}", (ts == DATETIME) ? format_datetime(*it) : std::format("{:.0f}", *it));
 
         for (const auto& el : data) {
             if (!ch_styles[el.first].show) continue;
@@ -290,7 +233,7 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_m
     dump.close();
 }
 
-std::string BSP::Telemetry::formatUnixTimestamp(double unix_timestamp) {
+std::string BSP::Telemetry::format_datetime(double unix_timestamp) {
     // get time from system clock
     time_t time = static_cast<time_t>(unix_timestamp);
 
@@ -304,8 +247,11 @@ std::string BSP::Telemetry::formatUnixTimestamp(double unix_timestamp) {
 }
 
 bool BSP::Telemetry::is_empty() const {
-    std::lock_guard<std::mutex> lock(plot_mtx);
+    std::lock_guard<std::mutex> lock(data_mtx);
 
     return data.empty();
 }
 
+std::mutex& BSP::Telemetry::get_data_mtx() {
+    return data_mtx;
+}

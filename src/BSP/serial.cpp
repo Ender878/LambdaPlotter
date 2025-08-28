@@ -13,7 +13,7 @@
 #include <unistd.h>
 
 std::string BSP::Serial::last_open_port = "";
-std::vector<std::string> BSP::Serial::serial_ports = readSystemPorts();
+std::vector<std::string> BSP::Serial::serial_ports = read_system_ports();
 
 uint16_t BSP::Serial::parity    = 0;         // parity bit disabled
 uint16_t BSP::Serial::stop_bits = 1;         // 1 stop bit
@@ -109,12 +109,11 @@ BSP::Serial::Serial(const char* port, size_t baud) {
 
     // save tty settings
     if (tcsetattr(serial_port_fd, TCSANOW, &tty) != 0) {
-        // std::print(stderr, "Error while saving {} settings: {}", port, strerror(errno));
         throw std::runtime_error(strerror(errno));
     }
 
-    // clear buffer
-    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    // clear serial buffer
+    std::this_thread::sleep_for(std::chrono::milliseconds(FLUSH_DELAY));
     tcflush(serial_port_fd, TCIOFLUSH);
 
     last_open_port = port;
@@ -128,20 +127,20 @@ BSP::Serial::~Serial() {
 
 std::vector<std::string>& BSP::Serial::getSerialPorts(bool refresh) {
     if (refresh) {
-        serial_ports = readSystemPorts();
+        serial_ports = read_system_ports();
     }
 
     return serial_ports;
 }
 
-std::vector<std::string> BSP::Serial::readSystemPorts() {
+std::vector<std::string> BSP::Serial::read_system_ports() {
     std::vector<std::string> ports;
 
     for (const auto& entry : std::filesystem::directory_iterator("/dev/")) {
         auto entry_str = entry.path().string();
 
         if (entry_str.find("ttyACM") != std::string::npos ||
-            entry_str.find("ttyUSB") != std::string::npos) 
+            entry_str.find("ttyUSB") != std::string::npos)
         {
             ports.push_back(entry_str);
         }
@@ -161,9 +160,9 @@ void BSP::Serial::setLastOpenPort(const char* port) {
 bool BSP::Serial::read(std::vector<char>& buf) const {
     buf.resize(DEFAULT_BUF_SIZE);
 
-    // if (!isPortConnected()) {
-    //     return false;
-    // }
+    if (!is_port_connected()) {
+        return false;
+    }
 
     int n = ::read(serial_port_fd, buf.data(), buf.size());
 
@@ -176,14 +175,14 @@ bool BSP::Serial::read(std::vector<char>& buf) const {
     return true;
 }
 
-bool BSP::Serial::isPortConnected() const {
+bool BSP::Serial::is_port_connected() const {
     termios tty;
 
     // read config to check if the port is still there
     return tcgetattr(serial_port_fd, &tty) == 0;
 }
 
-int BSP::Serial::getFileDescriptor() const {
+int BSP::Serial::get_file_descriptor() const {
     return serial_port_fd;
 }
 

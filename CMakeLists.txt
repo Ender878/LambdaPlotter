@@ -24,7 +24,7 @@ add_library(bsplib STATIC
     src/BSP/toolbar.cpp
     src/BSP/plotView.cpp
     src/BSP/window.cpp
-    src/common/shared.cpp
+    src/BSP/shared.cpp
 )
 
 target_include_directories(bsplib PUBLIC
@@ -60,7 +60,7 @@ if(BSP_BUILD_TESTS)
     find_package(GTest REQUIRED)
     include(GoogleTest)
 
-    add_executable(bsp_test tests/bsp_tests.cpp)
+    add_executable(bsp_test tests/telemetry_tests.cpp)
     target_link_libraries(bsp_test PRIVATE bsplib GTest::gtest GTest::gtest_main)
 
     gtest_discover_tests(bsp_test)

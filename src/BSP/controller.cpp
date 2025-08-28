@@ -1,5 +1,5 @@
 #include <BSP/controller.h>
-#include <common/shared.h>
+#include <BSP/shared.h>
 #include <BSP/serial.h>
 #include <BSP/telemetry.h>
 #include <BSP/toolbar.h>
@@ -16,47 +16,48 @@
 #include <thread>
 #include <vector>
 
-BSP::ToolBar BSP::Controller::toolbar;
+BSP::ToolBar     BSP::Controller::toolbar;
 BSP::app_state_t BSP::Controller::curr_app_state(IDLE);
 BSP::app_state_t BSP::Controller::prev_app_state(IDLE);
-BSP::Telemetry BSP::Controller::tel;
-BSP::PlotView BSP::Controller::plot_view;
+BSP::Telemetry   BSP::Controller::tel;
+BSP::PlotView    BSP::Controller::plot_view;
+std::mutex       BSP::Controller::thread_mtx;
 
 void BSP::Controller::update() {
     // get available serial ports
     std::vector<std::string> &serial_ports = Serial::getSerialPorts(toolbar.getRefreshButton());
 
     // update toolbar data
-    toolbar.updateSerialPorts(serial_ports);
+    toolbar.update_serial_ports(serial_ports);
     
-    BSP::Window::renderMenuBar([serial_ports]() {
+    BSP::Window::render_toolbar([serial_ports]() {
         toolbar.render(curr_app_state, tel.is_empty(), serial_ports);
-        plot_view.renderTelemetryToolbar(tel);
-        plot_view.renderDataFormat(tel, curr_app_state);
-        plot_view.renderPlotOptions();
+        plot_view.render_telemetry(tel);
+        plot_view.render_data_format(tel, curr_app_state);
+        plot_view.render_plot_options();
     });
 
     ImVec2 window_size = Window::getWindowSize();
-    plot_view.renderPlot(tel, curr_app_state, window_size.x * 0.25, 0, window_size.x * 0.75, window_size.y);
+    plot_view.render_plot(tel, curr_app_state, window_size.x * 0.25, 0, window_size.x * 0.75, window_size.y);
 
     // get updated app state (if we should read or close)
-    curr_app_state = toolbar.getAppState(curr_app_state);
+    curr_app_state = toolbar.get_new_app_state(curr_app_state);
 
     // check if the state is changed (open/close button pressed or device disconnection while reading)
     if (curr_app_state != prev_app_state) {
         if (curr_app_state == READING) {
-            startSerialReading(toolbar.getCurrentPort(), BSP::baud_rates[toolbar.getComboboxBaudIndex()].value);
+            start_serial_reading(toolbar.getCurrentPort(), BSP::baud_rates[toolbar.getComboboxBaudIndex()].value);
         } else {
             toolbar.setRefreshButton(true);
         }
     }
 
     if (toolbar.getSaveButton()) {
-        saveFile();
+        save_file();
     }
 
     if (toolbar.getClearButton()) {
-        std::lock_guard<std::mutex> lock(plot_mtx);
+        std::lock_guard<std::mutex> lock(tel.get_data_mtx());
         tel.clear();
         tel.set_start_time();
     }
@@ -64,18 +65,18 @@ void BSP::Controller::update() {
     prev_app_state = curr_app_state;
 }
 
-void BSP::Controller::saveFile() {
+void BSP::Controller::save_file() {
     std::string device_name = Serial::getLastOpenPort();
     device_name.erase(0, device_name.find_last_of("/") + 1);
-    std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::formatUnixTimestamp(Telemetry::get_unix_time()) + ".csv";        
+    std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";        
 
     // sanitize default file name (remove ':' from unix timestamp)
     std::replace(default_file_name.begin(), default_file_name.end(), ':', '-');
 
-    std::string path = BSP::Window::saveFileDialog(default_file_name.c_str());
+    std::string path = BSP::Window::render_save_fd(default_file_name.c_str());
 
     if (!path.empty()) {
-        tel.dump_data(path, plot_view.getPlotStyle().limits, plot_view.getChannelStyles(), plot_view.getPlotStyle().time_style);
+        tel.dump_data(path, plot_view.get_plot_style().limits, plot_view.get_channels_style(), plot_view.get_plot_style().time_style);
     }
 }
 
@@ -84,21 +85,22 @@ void BSP::Controller::shutdown() {
     curr_app_state = IDLE;
 }
 
-void BSP::Controller::startSerialReading(std::string port, size_t baud) {
+void BSP::Controller::start_serial_reading(std::string port, size_t baud) {
     std::thread([port, baud]() {
-        // lock the entire thread to ensure that there won't be any other overlapping reading threads
-        std::lock_guard<std::mutex> lock(BSP::thread_mtx);
+        // lock the entire thread to ensure that there won't be any other overlapping serial reading threads
+        std::lock_guard<std::mutex> lock(thread_mtx);
         try {
+
             std::string last_open_port = Serial::getLastOpenPort();
 
             {
-                std::lock_guard<std::mutex> lock(BSP::plot_mtx);
+                std::lock_guard<std::mutex> lock(tel.get_data_mtx());
 
                 if (port != last_open_port) {
                     tel.clear();
                     tel.set_start_time();
                 } else {
-                    tel.clearIncompleteChunk();
+                    tel.clear_fragments();
                 }
             }
 
@@ -112,7 +114,7 @@ void BSP::Controller::startSerialReading(std::string port, size_t baud) {
                     std::string frame_stream = tel.parse_serial(buffer);
 
                     if (!frame_stream.empty()) {
-                        std::lock_guard<std::mutex> lock(BSP::plot_mtx);
+                        std::lock_guard<std::mutex> lock(tel.get_data_mtx());
                         tel.parse_frame(frame_stream);
                     }
                     

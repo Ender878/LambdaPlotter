@@ -1,5 +1,6 @@
 #include <BSP/plotView.h>
 #include <BSP/telemetry.h>
+#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
@@ -10,15 +11,15 @@
 #include <string>
 #include "../fonts/lucide.h"
 #include "../implot/implot.h"
-#include "common/shared.h"
+#include "BSP/shared.h"
 
 #define TEXT_BUFFER_SIZE 256
 
-void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height) {
-    std::lock_guard<std::mutex> lock(BSP::plot_mtx);
+void BSP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height) {
+    std::lock_guard<std::mutex> lock(tel.get_data_mtx());
 
     std::vector<double>* times = (plot_style.time_style == DATETIME) ? tel.get_unix_timestamps() : tel.get_elapsed_timestamps();
-    auto* data = tel.getData();
+    auto* data = tel.get_data();
 
     ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y));
     ImGui::SetNextWindowSize(ImVec2(width, height));
@@ -66,7 +67,7 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
                         auto& channel = stream.second;
 
                         if (!plot_attributes.contains(data_id)) {
-                            channelStyleInit(data_id);
+                            channel_style_init(data_id);
                         }
 
                         if (plot_attributes[data_id].show) {
@@ -85,7 +86,15 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
                             channel.prev_offset = channel.offset;
                             channel.prev_scale  = channel.scale;
 
-                            plot_functions[plot_attributes[data_id].combobox_func_index].func(label.c_str(), times->data(), channel.values_transformed.data(), channel.values.size(), 0, 0, sizeof(double));
+                            plot_functions[plot_attributes[data_id].combobox_func_index]
+                                .func(label.c_str(), 
+                                      times->data(), 
+                                      channel.values_transformed.data(), 
+                                      channel.values.size(), 
+                                      0, 
+                                      0, 
+                                      sizeof(double)
+                                    );
 
                             ImPlot::PopStyleColor(2);
                         }
@@ -102,7 +111,7 @@ void BSP::PlotView::renderPlot(Telemetry& tel, app_state_t app_state, int pos_x,
     }
 }
 
-void BSP::PlotView::renderTelemetryToolbar(Telemetry& tel) {
+void BSP::PlotView::render_telemetry(Telemetry& tel) {
     ImGui::SeparatorText("Telemetry");
 
     static bool open = false;
@@ -114,12 +123,12 @@ void BSP::PlotView::renderTelemetryToolbar(Telemetry& tel) {
             ImGui::TableSetupColumn("Settings", ImGuiTableColumnFlags_WidthStretch, 0.1f);
             ImGui::TableSetupColumn("Button", ImGuiTableColumnFlags_WidthFixed, 50.0f);
     
-            std::lock_guard<std::mutex> lock(plot_mtx);
-            for (auto& data : *tel.getData()) {
+            std::lock_guard<std::mutex> lock(tel.get_data_mtx());
+            for (auto& data : *tel.get_data()) {
                 auto data_id = data.first;
         
                 if (!plot_attributes.contains(data_id)) {
-                    channelStyleInit(data_id);
+                    channel_style_init(data_id);
                 }
     
                 ImGui::TableNextRow();
@@ -173,7 +182,7 @@ void BSP::PlotView::renderTelemetryToolbar(Telemetry& tel) {
                     ImGui::OpenPopup(("##ChannelConfig" + std::to_string(data_id)).c_str());
                 }
 
-                renderChannelSettings(data_id, data.second, plot_attributes[data_id]);
+                render_channel_settings(data_id, data.second, plot_attributes[data_id]);
         
                 ImGui::TableNextColumn();
         
@@ -190,15 +199,15 @@ void BSP::PlotView::renderTelemetryToolbar(Telemetry& tel) {
         }
 
         if (ImGui::Button("Clear")) {
-            std::lock_guard<std::mutex> lock(BSP::plot_mtx);
-            tel.clearValues();
+            std::lock_guard<std::mutex> lock(tel.get_data_mtx());
+            tel.clear_values();
         }
     } else {
         ImGui::Text("No telemetry received yet!");
     }    
 }
 
-void BSP::PlotView::renderPlotOptions() {
+void BSP::PlotView::render_plot_options() {
     ImGui::SeparatorText("Plot options");
 
     if (ImGui::BeginTable("##TimeTable", 2)) {
@@ -214,7 +223,7 @@ void BSP::PlotView::renderPlotOptions() {
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         if (ImGui::BeginCombo("##time", BSP::time_windows[combobox_time_index].str)) {
-            for (size_t i = 0; i < BSP::time_windows_size; i++) {
+            for (size_t i = 0; i < BSP::time_windows.size(); i++) {
                 bool selected = combobox_time_index == i;
 
                 if (ImGui::Selectable(BSP::time_windows[i].str, selected)) {
@@ -249,7 +258,7 @@ void BSP::PlotView::renderPlotOptions() {
     }
 }
 
-void BSP::PlotView::channelStyleInit(key_t id) {
+void BSP::PlotView::channel_style_init(int id) {
     ImVec4 default_colormap = ImPlot::GetColormapColor(id - 1);
     plot_attributes[id] = {
         .color = { default_colormap.x, default_colormap.y, default_colormap.z, default_colormap.w },
@@ -257,7 +266,7 @@ void BSP::PlotView::channelStyleInit(key_t id) {
     };
 }
 
-void BSP::PlotView::renderChannelSettings(key_t id, Channel& data, ChannelStyle& style) {
+void BSP::PlotView::render_channel_settings(int id, Channel& data, ChannelStyle& style) {
     if (ImGui::BeginPopup(("##ChannelConfig" + std::to_string(id)).c_str())) {
         ImGui::Text("Channel '%s'", data.name.c_str());
         ImGui::Separator();
@@ -296,7 +305,7 @@ void BSP::PlotView::renderChannelSettings(key_t id, Channel& data, ChannelStyle&
     
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
             if (ImGui::BeginCombo("##func", BSP::plot_functions[style.combobox_func_index].str)) {
-                for (size_t i = 0; i < BSP::plot_functions_size; i++) {
+                for (size_t i = 0; i < plot_functions.size(); i++) {
                     bool selected = style.combobox_func_index == i;
     
                     if (ImGui::Selectable(BSP::plot_functions[i].str, selected)) {
@@ -315,7 +324,7 @@ void BSP::PlotView::renderChannelSettings(key_t id, Channel& data, ChannelStyle&
     }
 }
 
-void BSP::PlotView::renderDataFormat(Telemetry& tel, app_state_t app_state) {
+void BSP::PlotView::render_data_format(Telemetry& tel, app_state_t app_state) {
     ImGui::SeparatorText("Data Format");
 
     if (app_state == READING) {
@@ -359,22 +368,7 @@ void BSP::PlotView::renderDataFormat(Telemetry& tel, app_state_t app_state) {
 
         ImGui::SameLine();
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
-        ImGui::SmallButton("(?)");
-        ImGui::PopStyleColor(4);
-        ImGui::PopStyleVar();
-
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            // TODO: finish this
-            ImGui::Text("Ciaoo");
-        
-            ImGui::EndTooltip();
-        }
+        render_tooltip("placeholder");
 
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -510,10 +504,29 @@ void BSP::PlotView::renderDataFormat(Telemetry& tel, app_state_t app_state) {
     }
 }
 
-const BSP::plot_functions_t BSP::plot_functions[] = {
-    {"Line",    ImPlot::PlotLine<double>    },
-    {"Scatter", ImPlot::PlotScatter<double> },
-    {"Shaded",  ImPlot::PlotShaded<double>  },
-};
+void BSP::PlotView::render_tooltip(const char* message) {
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.0f);
+    ImGui::SmallButton("(?)");
+    ImGui::PopStyleColor(4);
+    ImGui::PopStyleVar();
 
-constexpr size_t BSP::plot_functions_size = sizeof(BSP::plot_functions) / sizeof(*BSP::plot_functions);
+    if (ImGui::IsItemHovered()) {
+        ImGui::BeginTooltip();
+
+        ImGui::Text("%s", message);
+    
+        ImGui::EndTooltip();
+    }
+}
+
+const std::array<BSP::plot_functions_t, PLOT_FUNC_SIZE> BSP::plot_functions = {
+    {
+        {"Line",    ImPlot::PlotLine<double>    },
+        {"Scatter", ImPlot::PlotScatter<double> },
+        {"Shaded",  ImPlot::PlotShaded<double>  },
+    }
+};

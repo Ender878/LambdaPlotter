@@ -1,7 +1,7 @@
 #include <BSP/window.h>
 #include "../fonts/lucide.h"
 #include "../fonts/roboto.h"
-#include <common/shared.h>
+#include <BSP/shared.h>
 #include "../tinyfd/tinyfiledialogs.h"
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
@@ -15,12 +15,10 @@
 
 #include "../bindings/imgui_impl_glfw.h"
 
-#define RGB(num) num / 255.0f
-
-GLFWwindow* BSP::Window::window = nullptr;
-ImGuiIO* BSP::Window::io = nullptr;
-ImGuiStyle* BSP::Window::imgui_style = nullptr;
-ImPlotStyle* BSP::Window::implot_style = nullptr;
+GLFWwindow*     BSP::Window::window       = nullptr;
+ImGuiIO*        BSP::Window::io           = nullptr;
+ImGuiStyle*     BSP::Window::imgui_style  = nullptr;
+ImPlotStyle*    BSP::Window::implot_style = nullptr;
 int BSP::Window::m_width  = 0;
 int BSP::Window::m_height = 0;
 
@@ -56,6 +54,8 @@ void BSP::Window::init(int t_width, int t_height, const char* title) {
     implot_style = &ImPlot::GetStyle();
 
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io->IniFilename = nullptr;
+    io->LogFilename = nullptr;
 
     loadDefaultFont();
     loadIconFont();
@@ -66,7 +66,7 @@ void BSP::Window::init(int t_width, int t_height, const char* title) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-bool BSP::Window::renderMainWindow(std::function<void()> content) {
+bool BSP::Window::render_mainloop(std::function<void()> content) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     glfwGetWindowSize(window, &m_width, &m_height);
@@ -86,11 +86,15 @@ bool BSP::Window::renderMainWindow(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void BSP::Window::renderMenuBar(std::function<void()> content) {
+void BSP::Window::render_toolbar(std::function<void()> content) {
     ImGui::SetNextWindowPos(ImVec2(0, 0)); 
     ImGui::SetNextWindowSize(ImVec2(m_width * 0.25, m_height));
 
-    if (ImGui::Begin("MenuBar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
+    if (ImGui::Begin("MenuBar", nullptr, 
+        ImGuiWindowFlags_NoMove 
+            | ImGuiWindowFlags_NoResize 
+            | ImGuiWindowFlags_NoCollapse
+            | ImGuiWindowFlags_NoTitleBar)) {
 
         content();
 
@@ -108,7 +112,7 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-std::string BSP::Window::saveFileDialog(const char* default_path) {
+std::string BSP::Window::render_save_fd(const char* default_path) {
     const char* path = tinyfd_saveFileDialog(
         "Save data", 
         default_path, 
@@ -126,12 +130,6 @@ std::string BSP::Window::saveFileDialog(const char* default_path) {
 
 ImVec2 BSP::Window::getWindowSize() {
     return ImVec2(m_width, m_height);
-}
-
-void BSP::Window::renderTelemetry() {
-    ImGui::SeparatorText("Telemetry");
-
-    ImGui::Text("No telemetry received yet!");
 }
 
 void BSP::Window::loadDefaultFont() {
@@ -157,17 +155,17 @@ void BSP::Window::loadIconFont() {
 void BSP::Window::setDarkStyle() {
     ImGui::StyleColorsDark();
 
-    // widget spacing
+    // --- Widgets spacing ---
     imgui_style->ItemSpacing                        = ImVec2(12, 8); 
     imgui_style->ItemInnerSpacing                   = ImVec2(2, 3);
     
-    // widget style 
+    // --- Widgets style ---
     imgui_style->CellPadding                        = ImVec2(5, 5);
     imgui_style->FramePadding                       = ImVec2(3, 3);
     imgui_style->FrameRounding                      = 4.0f;
     imgui_style->FrameBorderSize                    = 1.0f;
 
-    // Colors 
+    // --- Colors --- 
     imgui_style->Colors[ImGuiCol_WindowBg]          = ImVec4(0.09f, 0.1f, 0.15f, 1.0f);
     imgui_style->Colors[ImGuiCol_FrameBg]           = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
     imgui_style->Colors[ImGuiCol_FrameBgHovered]    = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
@@ -175,13 +173,13 @@ void BSP::Window::setDarkStyle() {
     imgui_style->Colors[ImGuiCol_HeaderHovered]     = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
     imgui_style->Colors[ImGuiCol_HeaderActive]      = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
 
-    imgui_style->Colors[ImGuiCol_Button]            = ImVec4(RGB(13), RGB(113), RGB(235), 1.0f);
+    imgui_style->Colors[ImGuiCol_Button]            = ImVec4(0.05f, 0.4f, 0.9f, 1.0f);
     imgui_style->Colors[ImGuiCol_ButtonHovered]     = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
     imgui_style->Colors[ImGuiCol_ButtonActive]      = ImVec4(0.0f, 0.5f, 0.2f, 1.0f);
 
     imgui_style->Colors[ImGuiCol_CheckMark]         = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
 
-    // implot style
+    // --- Implot style ---
     implot_style->LineWeight                        = 2.0f;
     implot_style->UseLocalTime                      = true;
 
