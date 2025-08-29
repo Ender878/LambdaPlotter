@@ -1,5 +1,5 @@
-#include <BSP/plotView.h>
-#include <BSP/telemetry.h>
+#include <LP/plotView.h>
+#include <LP/telemetry.h>
 #include <array>
 #include <cstddef>
 #include <cstdio>
@@ -11,11 +11,11 @@
 #include <string>
 #include "../fonts/lucide.h"
 #include "../implot/implot.h"
-#include "BSP/shared.h"
+#include "LP/shared.h"
 
 #define TEXT_BUFFER_SIZE 256
 
-void BSP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height) {
+void LP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height) {
     std::lock_guard<std::mutex> lock(tel.get_data_mtx());
 
     std::vector<double>* times = (plot_style.time_style == DATETIME) ? tel.get_unix_timestamps() : tel.get_elapsed_timestamps();
@@ -39,7 +39,7 @@ void BSP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x
                     double first_time = times->front();
                     double last_time  = times->back();
     
-                    int time_window = BSP::time_windows[combobox_time_index].value;
+                    int time_window = LP::time_windows[combobox_time_index].value;
 
                     if (plot_style.time_style == ELAPSED) {
                         time_window *= 1000;
@@ -111,7 +111,7 @@ void BSP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x
     }
 }
 
-void BSP::PlotView::render_telemetry(Telemetry& tel) {
+void LP::PlotView::render_telemetry(Telemetry& tel) {
     ImGui::SeparatorText("Telemetry");
 
     static bool open = false;
@@ -207,7 +207,7 @@ void BSP::PlotView::render_telemetry(Telemetry& tel) {
     }    
 }
 
-void BSP::PlotView::render_plot_options() {
+void LP::PlotView::render_plot_options() {
     ImGui::SeparatorText("Plot options");
 
     if (ImGui::BeginTable("##TimeTable", 2)) {
@@ -222,11 +222,11 @@ void BSP::PlotView::render_plot_options() {
         ImGui::TableNextColumn();
 
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        if (ImGui::BeginCombo("##time", BSP::time_windows[combobox_time_index].str)) {
-            for (size_t i = 0; i < BSP::time_windows.size(); i++) {
+        if (ImGui::BeginCombo("##time", LP::time_windows[combobox_time_index].str)) {
+            for (size_t i = 0; i < LP::time_windows.size(); i++) {
                 bool selected = combobox_time_index == i;
 
-                if (ImGui::Selectable(BSP::time_windows[i].str, selected)) {
+                if (ImGui::Selectable(LP::time_windows[i].str, selected)) {
                     combobox_time_index = i;
                     ImGui::SetItemDefaultFocus();
                 }
@@ -258,7 +258,7 @@ void BSP::PlotView::render_plot_options() {
     }
 }
 
-void BSP::PlotView::channel_style_init(int id) {
+void LP::PlotView::channel_style_init(int id) {
     ImVec4 default_colormap = ImPlot::GetColormapColor(id - 1);
     plot_attributes[id] = {
         .color = { default_colormap.x, default_colormap.y, default_colormap.z, default_colormap.w },
@@ -266,7 +266,7 @@ void BSP::PlotView::channel_style_init(int id) {
     };
 }
 
-void BSP::PlotView::render_channel_settings(int id, Channel& data, ChannelStyle& style) {
+void LP::PlotView::render_channel_settings(int id, Channel& data, ChannelStyle& style) {
     if (ImGui::BeginPopup(("##ChannelConfig" + std::to_string(id)).c_str())) {
         ImGui::Text("Channel '%s'", data.name.c_str());
         ImGui::Separator();
@@ -304,11 +304,11 @@ void BSP::PlotView::render_channel_settings(int id, Channel& data, ChannelStyle&
             ImGui::TableNextColumn();
     
             ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::BeginCombo("##func", BSP::plot_functions[style.combobox_func_index].str)) {
+            if (ImGui::BeginCombo("##func", LP::plot_functions[style.combobox_func_index].str)) {
                 for (size_t i = 0; i < plot_functions.size(); i++) {
                     bool selected = style.combobox_func_index == i;
     
-                    if (ImGui::Selectable(BSP::plot_functions[i].str, selected)) {
+                    if (ImGui::Selectable(LP::plot_functions[i].str, selected)) {
                         style.combobox_func_index = i;
                         ImGui::SetItemDefaultFocus();
                     }
@@ -324,7 +324,7 @@ void BSP::PlotView::render_channel_settings(int id, Channel& data, ChannelStyle&
     }
 }
 
-void BSP::PlotView::render_data_format(Telemetry& tel, app_state_t app_state) {
+void LP::PlotView::render_data_format(Telemetry& tel, app_state_t app_state) {
     ImGui::SeparatorText("Data Format");
 
     if (app_state == READING) {
@@ -504,7 +504,7 @@ void BSP::PlotView::render_data_format(Telemetry& tel, app_state_t app_state) {
     }
 }
 
-void BSP::PlotView::render_tooltip(const char* message) {
+void LP::PlotView::render_tooltip(const char* message) {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
@@ -523,7 +523,7 @@ void BSP::PlotView::render_tooltip(const char* message) {
     }
 }
 
-const std::array<BSP::plot_functions_t, PLOT_FUNC_SIZE> BSP::plot_functions = {
+const std::array<LP::plot_functions_t, PLOT_FUNC_SIZE> LP::plot_functions = {
     {
         {"Line",    ImPlot::PlotLine<double>    },
         {"Scatter", ImPlot::PlotScatter<double> },

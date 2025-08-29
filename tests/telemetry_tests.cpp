@@ -1,4 +1,4 @@
-#include "BSP/telemetry.h"
+#include "LP/telemetry.h"
 #include <cstring>
 #include <gtest/gtest.h>
 #include <string>
@@ -6,7 +6,7 @@
 
 class TelemetryTest : public ::testing::Test {
     protected:
-        BSP::Telemetry tel;
+        LP::Telemetry tel;
 };
 
 // === SERIAL BUFFER PARSING ===

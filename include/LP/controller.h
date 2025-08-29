@@ -7,7 +7,7 @@
 #include <mutex>
 #include <string>
 
-namespace BSP {
+namespace LP {
     class Controller {
         private:
             // reading thread's mutex

@@ -1785,7 +1785,7 @@ void PlotShaded(const char* label_id, const T* values, int count, double y_ref, 
     PlotShadedEx(label_id, getter1, getter2, flags);
 }
 
-// === MODIFIED BY BSP == (remove y_ref)
+// === MODIFIED BY LP == (remove y_ref)
 template <typename T>
 void PlotShaded(const char* label_id, const T* xs, const T* ys, int count, /*double y_ref,*/ ImPlotShadedFlags flags, int offset, int stride) {
     double y_ref = 0;

@@ -1,14 +1,14 @@
-#include <BSP/toolbar.h>
-#include <BSP/serial.h>
+#include <LP/toolbar.h>
+#include <LP/serial.h>
 #include "../fonts/lucide.h"
-#include "BSP/shared.h"
+#include "LP/shared.h"
 
 #include <imgui.h>
 #include <algorithm>
 #include <string>
 #include <vector>
 
-void BSP::ToolBar::update_serial_ports(const std::vector<std::string> &serial_ports) {
+void LP::ToolBar::update_serial_ports(const std::vector<std::string> &serial_ports) {
     if (refresh_button) {
         // if the port list is empty, but the list index has a value, set the
         // index to null
@@ -30,7 +30,7 @@ void BSP::ToolBar::update_serial_ports(const std::vector<std::string> &serial_po
     current_port = combobox_port_index.has_value() ? serial_ports[combobox_port_index.value()] : "";
 }
 
-BSP::app_state_t BSP::ToolBar::get_new_app_state(const app_state_t &curr_app_state) const {
+LP::app_state_t LP::ToolBar::get_new_app_state(const app_state_t &curr_app_state) const {
     app_state_t state = curr_app_state;
 
     if (open_close_button) {
@@ -47,12 +47,12 @@ BSP::app_state_t BSP::ToolBar::get_new_app_state(const app_state_t &curr_app_sta
     return state;
 }
 
-void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::vector<std::string>& serial_ports) {
+void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::vector<std::string>& serial_ports) {
     // get prev selected port and baud rate
     const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() 
         ? serial_ports[combobox_port_index.value()].c_str() 
         : "";
-    const char* selected_baud = BSP::baud_rates[combobox_baud_index].str;
+    const char* selected_baud = LP::baud_rates[combobox_baud_index].str;
 
     ImGui::SeparatorText("Serial interface");
 
@@ -88,10 +88,10 @@ void BSP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::v
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 5);
         if (ImGui::BeginCombo("##baud", selected_baud)) {
-            for (size_t i = 0; i < BSP::baud_rates.size(); i++) {
+            for (size_t i = 0; i < LP::baud_rates.size(); i++) {
                 bool selected = combobox_baud_index == i;
 
-                if (ImGui::Selectable(BSP::baud_rates[i].str, selected)) {
+                if (ImGui::Selectable(LP::baud_rates[i].str, selected)) {
                     combobox_baud_index = i;
                     ImGui::SetItemDefaultFocus();
                 }

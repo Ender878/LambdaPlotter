@@ -10,7 +10,7 @@
 #define DEFAULT_BUF_SIZE 1024
 #define FLUSH_DELAY      5
 
-namespace BSP {
+namespace LP {
     class Serial {
         private:
             int serial_port_fd;

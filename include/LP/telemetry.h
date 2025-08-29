@@ -1,14 +1,14 @@
 #ifndef __TELEMETRY_H__
 #define __TELEMETRY_H__
 
-#include "BSP/shared.h"
+#include "LP/shared.h"
 #include <chrono>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-namespace BSP {
+namespace LP {
     struct ChannelStyle;
 
     // struct containing all the attributes and values of plot channels

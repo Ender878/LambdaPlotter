@@ -1,4 +1,4 @@
-#include <BSP/serial.h>
+#include <LP/serial.h>
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
@@ -12,15 +12,15 @@
 #include <termios.h>
 #include <unistd.h>
 
-std::string BSP::Serial::last_open_port = "";
-std::vector<std::string> BSP::Serial::serial_ports = read_system_ports();
+std::string LP::Serial::last_open_port = "";
+std::vector<std::string> LP::Serial::serial_ports = read_system_ports();
 
-uint16_t BSP::Serial::parity    = 0;         // parity bit disabled
-uint16_t BSP::Serial::stop_bits = 1;         // 1 stop bit
-uint16_t BSP::Serial::data_bits = CS8;       // 8 data bits
-uint16_t BSP::Serial::flow_ctrl = 0;         // hardware flow control disabled
+uint16_t LP::Serial::parity    = 0;         // parity bit disabled
+uint16_t LP::Serial::stop_bits = 1;         // 1 stop bit
+uint16_t LP::Serial::data_bits = CS8;       // 8 data bits
+uint16_t LP::Serial::flow_ctrl = 0;         // hardware flow control disabled
 
-BSP::Serial::Serial(const char* port, size_t baud) {
+LP::Serial::Serial(const char* port, size_t baud) {
     termios tty;
 
     // get port file descriptor
@@ -119,13 +119,13 @@ BSP::Serial::Serial(const char* port, size_t baud) {
     last_open_port = port;
 }
 
-BSP::Serial::~Serial() {
+LP::Serial::~Serial() {
     // unlock and close the serial port
     flock(serial_port_fd, LOCK_UN);
     ::close(serial_port_fd);
 }
 
-std::vector<std::string>& BSP::Serial::getSerialPorts(bool refresh) {
+std::vector<std::string>& LP::Serial::getSerialPorts(bool refresh) {
     if (refresh) {
         serial_ports = read_system_ports();
     }
@@ -133,7 +133,7 @@ std::vector<std::string>& BSP::Serial::getSerialPorts(bool refresh) {
     return serial_ports;
 }
 
-std::vector<std::string> BSP::Serial::read_system_ports() {
+std::vector<std::string> LP::Serial::read_system_ports() {
     std::vector<std::string> ports;
 
     for (const auto& entry : std::filesystem::directory_iterator("/dev/")) {
@@ -149,15 +149,15 @@ std::vector<std::string> BSP::Serial::read_system_ports() {
     return ports;
 }
 
-std::string BSP::Serial::getLastOpenPort() {
+std::string LP::Serial::getLastOpenPort() {
     return last_open_port;
 }
 
-void BSP::Serial::setLastOpenPort(const char* port) {
+void LP::Serial::setLastOpenPort(const char* port) {
     last_open_port = port;
 }
 
-bool BSP::Serial::read(std::vector<char>& buf) const {
+bool LP::Serial::read(std::vector<char>& buf) const {
     buf.resize(DEFAULT_BUF_SIZE);
 
     if (!is_port_connected()) {
@@ -175,17 +175,17 @@ bool BSP::Serial::read(std::vector<char>& buf) const {
     return true;
 }
 
-bool BSP::Serial::is_port_connected() const {
+bool LP::Serial::is_port_connected() const {
     termios tty;
 
     // read config to check if the port is still there
     return tcgetattr(serial_port_fd, &tty) == 0;
 }
 
-int BSP::Serial::get_file_descriptor() const {
+int LP::Serial::get_file_descriptor() const {
     return serial_port_fd;
 }
 
-void BSP::Serial::close() {
+void LP::Serial::close() {
     ::close(serial_port_fd);
 }

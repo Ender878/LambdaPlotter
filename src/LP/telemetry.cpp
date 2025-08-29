@@ -1,7 +1,7 @@
-#include "BSP/plotView.h"
+#include "LP/plotView.h"
 #include <algorithm>
-#include <BSP/shared.h>
-#include <BSP/telemetry.h>
+#include <LP/shared.h>
+#include <LP/telemetry.h>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -21,10 +21,10 @@
 #include <unordered_map>
 #include <vector>
 
-BSP::Telemetry::Telemetry() 
+LP::Telemetry::Telemetry() 
     : start_time(std::chrono::system_clock::now()), frame_fragments("") {}
 
-std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
+std::string LP::Telemetry::parse_serial(std::vector<char>& buffer) {
     // char buffer to valid string
     buffer.push_back('\0');
     std::string buffer_str = buffer.data();
@@ -60,7 +60,7 @@ std::string BSP::Telemetry::parse_serial(std::vector<char>& buffer) {
     return frame_stream;
 }
 
-void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
+void LP::Telemetry::parse_frame(const std::string& frame_stream) {
     auto it_end = std::sregex_iterator();
 
     std::string frame_end   = Telemetry::format_special_chars(frame_format.frame_end);
@@ -123,7 +123,7 @@ void BSP::Telemetry::parse_frame(const std::string& frame_stream) {
     }
 }
 
-std::string BSP::Telemetry::format_special_chars(const char* s) {
+std::string LP::Telemetry::format_special_chars(const char* s) {
     std::string result = s;
 
     result = std::regex_replace(result, std::regex(R"(\\n)"), "\n");
@@ -135,18 +135,18 @@ std::string BSP::Telemetry::format_special_chars(const char* s) {
     return result;
 }
 
-int BSP::Telemetry::get_elapsed_time() {
+int LP::Telemetry::get_elapsed_time() {
     double now        = get_unix_time();
     double start_time = get_start_time();
 
     return int((now - start_time) * 1000);
 }
 
-double BSP::Telemetry::get_start_time() const {
+double LP::Telemetry::get_start_time() const {
     return std::chrono::duration<double>(start_time.time_since_epoch()).count();
 }
 
-void BSP::Telemetry::clear_values() {
+void LP::Telemetry::clear_values() {
     frame_fragments = "";
 
     for (auto& el : data) {
@@ -159,7 +159,7 @@ void BSP::Telemetry::clear_values() {
     set_start_time();
 }
 
-void BSP::Telemetry::clear() {
+void LP::Telemetry::clear() {
     frame_fragments = "";
 
     data.clear();
@@ -169,13 +169,13 @@ void BSP::Telemetry::clear() {
     set_start_time();
 }
 
-double BSP::Telemetry::get_unix_time() {
+double LP::Telemetry::get_unix_time() {
     auto now = std::chrono::system_clock::now();
 
     return std::chrono::duration<double>(now.time_since_epoch()).count();
 }
 
-void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_map<int, ChannelStyle> ch_styles, PlotTimeStyle ts) const {
+void LP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_map<int, ChannelStyle> ch_styles, PlotTimeStyle ts) const {
     std::ofstream dump(path);
 
     const auto& times = (ts == DATETIME) ? times_unix : times_elapsed;
@@ -233,7 +233,7 @@ void BSP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_m
     dump.close();
 }
 
-std::string BSP::Telemetry::format_datetime(double unix_timestamp) {
+std::string LP::Telemetry::format_datetime(double unix_timestamp) {
     // get time from system clock
     time_t time = static_cast<time_t>(unix_timestamp);
 
@@ -246,12 +246,12 @@ std::string BSP::Telemetry::format_datetime(double unix_timestamp) {
     return oss.str();
 }
 
-bool BSP::Telemetry::is_empty() const {
+bool LP::Telemetry::is_empty() const {
     std::lock_guard<std::mutex> lock(data_mtx);
 
     return data.empty();
 }
 
-std::mutex& BSP::Telemetry::get_data_mtx() {
+std::mutex& LP::Telemetry::get_data_mtx() {
     return data_mtx;
 }

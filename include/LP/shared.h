@@ -14,7 +14,7 @@
 #define BAUD_RATES_SIZE         11
 #define TIME_WINDOWS_SIZE       9 
 
-namespace BSP {
+namespace LP {
     typedef struct combobox_tuple_t {
         const char* str;
         const int   value;

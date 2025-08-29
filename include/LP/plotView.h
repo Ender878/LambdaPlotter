@@ -7,7 +7,7 @@
 
 #define PLOT_FUNC_SIZE 3
 
-namespace BSP {
+namespace LP {
     typedef void (*PlotFunc)(const char*, const double*, const double*, int, int, int, int);
 
     // struct storing channels' plot style

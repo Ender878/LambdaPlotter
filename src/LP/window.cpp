@@ -1,11 +1,11 @@
-#include <BSP/window.h>
+#include <LP/window.h>
 #include "../fonts/lucide.h"
 #include "../fonts/roboto.h"
-#include <BSP/shared.h>
+#include <LP/shared.h>
 #include "../tinyfd/tinyfiledialogs.h"
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
-#include <BSP/serial.h>
+#include <LP/serial.h>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -15,14 +15,14 @@
 
 #include "../bindings/imgui_impl_glfw.h"
 
-GLFWwindow*     BSP::Window::window       = nullptr;
-ImGuiIO*        BSP::Window::io           = nullptr;
-ImGuiStyle*     BSP::Window::imgui_style  = nullptr;
-ImPlotStyle*    BSP::Window::implot_style = nullptr;
-int BSP::Window::m_width  = 0;
-int BSP::Window::m_height = 0;
+GLFWwindow*     LP::Window::window       = nullptr;
+ImGuiIO*        LP::Window::io           = nullptr;
+ImGuiStyle*     LP::Window::imgui_style  = nullptr;
+ImPlotStyle*    LP::Window::implot_style = nullptr;
+int LP::Window::m_width  = 0;
+int LP::Window::m_height = 0;
 
-void BSP::Window::init(int t_width, int t_height, const char* title) {
+void LP::Window::init(int t_width, int t_height, const char* title) {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW.");
     }
@@ -66,7 +66,7 @@ void BSP::Window::init(int t_width, int t_height, const char* title) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-bool BSP::Window::render_mainloop(std::function<void()> content) {
+bool LP::Window::render_mainloop(std::function<void()> content) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     glfwGetWindowSize(window, &m_width, &m_height);
@@ -86,7 +86,7 @@ bool BSP::Window::render_mainloop(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void BSP::Window::render_toolbar(std::function<void()> content) {
+void LP::Window::render_toolbar(std::function<void()> content) {
     ImGui::SetNextWindowPos(ImVec2(0, 0)); 
     ImGui::SetNextWindowSize(ImVec2(m_width * 0.25, m_height));
 
@@ -102,7 +102,7 @@ void BSP::Window::render_toolbar(std::function<void()> content) {
     }
 }
 
-void BSP::Window::destroy() {
+void LP::Window::destroy() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -112,7 +112,7 @@ void BSP::Window::destroy() {
     glfwTerminate();
 }
 
-std::string BSP::Window::render_save_fd(const char* default_path) {
+std::string LP::Window::render_save_fd(const char* default_path) {
     const char* path = tinyfd_saveFileDialog(
         "Save data", 
         default_path, 
@@ -128,18 +128,18 @@ std::string BSP::Window::render_save_fd(const char* default_path) {
     return std::string();
 }
 
-ImVec2 BSP::Window::getWindowSize() {
+ImVec2 LP::Window::getWindowSize() {
     return ImVec2(m_width, m_height);
 }
 
-void BSP::Window::loadDefaultFont() {
+void LP::Window::loadDefaultFont() {
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;
 
     io->Fonts->AddFontFromMemoryTTF(roboto_ttf, roboto_ttf_len, 18.0f, &config); 
 }
 
-void BSP::Window::loadIconFont() {
+void LP::Window::loadIconFont() {
     const ImWchar icon_ranges[] = { 0xE132, 0xE158, 0 };
 
     ImFontConfig config;
@@ -152,7 +152,7 @@ void BSP::Window::loadIconFont() {
     io->Fonts->AddFontFromMemoryTTF(lucide_ttf, lucide_ttf_len, ICON_SIZE, &config);
 }
 
-void BSP::Window::setDarkStyle() {
+void LP::Window::setDarkStyle() {
     ImGui::StyleColorsDark();
 
     // --- Widgets spacing ---

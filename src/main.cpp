@@ -1,19 +1,19 @@
-#include "BSP/window.h"
-#include "BSP/controller.h"
-#include "BSP/shared.h"
+#include <LP/window.h>
+#include <LP/controller.h>
+#include <LP/shared.h>
 #include <exception>
 #include <print>
 
 int main(void) {
     try {
-        BSP::Window::init(MIN_WIN_WIDTH, MIN_WIN_HEIGHT, "Better Serial Plotter");
+        LP::Window::init(MIN_WIN_WIDTH, MIN_WIN_HEIGHT, "LambdaPlotter");
 
-        while (BSP::Window::render_mainloop([]() -> void {
-            BSP::Controller::update();
+        while (LP::Window::render_mainloop([]() -> void {
+            LP::Controller::update();
         }));
 
-        BSP::Controller::shutdown();
-        BSP::Window::destroy();
+        LP::Controller::shutdown();
+        LP::Window::destroy();
     } catch (const std::exception& e) {
         std::println(stderr, "ERROR: {}", e.what());
         return EXIT_FAILURE;

@@ -1,9 +1,9 @@
-#include <BSP/controller.h>
-#include <BSP/shared.h>
-#include <BSP/serial.h>
-#include <BSP/telemetry.h>
-#include <BSP/toolbar.h>
-#include <BSP/window.h>
+#include <LP/controller.h>
+#include <LP/shared.h>
+#include <LP/serial.h>
+#include <LP/telemetry.h>
+#include <LP/toolbar.h>
+#include <LP/window.h>
 #include <algorithm>
 #include <chrono>
 
@@ -16,21 +16,21 @@
 #include <thread>
 #include <vector>
 
-BSP::ToolBar     BSP::Controller::toolbar;
-BSP::app_state_t BSP::Controller::curr_app_state(IDLE);
-BSP::app_state_t BSP::Controller::prev_app_state(IDLE);
-BSP::Telemetry   BSP::Controller::tel;
-BSP::PlotView    BSP::Controller::plot_view;
-std::mutex       BSP::Controller::thread_mtx;
+LP::ToolBar     LP::Controller::toolbar;
+LP::app_state_t LP::Controller::curr_app_state(IDLE);
+LP::app_state_t LP::Controller::prev_app_state(IDLE);
+LP::Telemetry   LP::Controller::tel;
+LP::PlotView    LP::Controller::plot_view;
+std::mutex      LP::Controller::thread_mtx;
 
-void BSP::Controller::update() {
+void LP::Controller::update() {
     // get available serial ports
     std::vector<std::string> &serial_ports = Serial::getSerialPorts(toolbar.getRefreshButton());
 
     // update toolbar data
     toolbar.update_serial_ports(serial_ports);
     
-    BSP::Window::render_toolbar([serial_ports]() {
+    LP::Window::render_toolbar([serial_ports]() {
         toolbar.render(curr_app_state, tel.is_empty(), serial_ports);
         plot_view.render_telemetry(tel);
         plot_view.render_data_format(tel, curr_app_state);
@@ -46,7 +46,7 @@ void BSP::Controller::update() {
     // check if the state is changed (open/close button pressed or device disconnection while reading)
     if (curr_app_state != prev_app_state) {
         if (curr_app_state == READING) {
-            start_serial_reading(toolbar.getCurrentPort(), BSP::baud_rates[toolbar.getComboboxBaudIndex()].value);
+            start_serial_reading(toolbar.getCurrentPort(), LP::baud_rates[toolbar.getComboboxBaudIndex()].value);
         } else {
             toolbar.setRefreshButton(true);
         }
@@ -65,7 +65,7 @@ void BSP::Controller::update() {
     prev_app_state = curr_app_state;
 }
 
-void BSP::Controller::save_file() {
+void LP::Controller::save_file() {
     std::string device_name = Serial::getLastOpenPort();
     device_name.erase(0, device_name.find_last_of("/") + 1);
     std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";        
@@ -73,19 +73,19 @@ void BSP::Controller::save_file() {
     // sanitize default file name (remove ':' from unix timestamp)
     std::replace(default_file_name.begin(), default_file_name.end(), ':', '-');
 
-    std::string path = BSP::Window::render_save_fd(default_file_name.c_str());
+    std::string path = LP::Window::render_save_fd(default_file_name.c_str());
 
     if (!path.empty()) {
         tel.dump_data(path, plot_view.get_plot_style().limits, plot_view.get_channels_style(), plot_view.get_plot_style().time_style);
     }
 }
 
-void BSP::Controller::shutdown() {
+void LP::Controller::shutdown() {
     // set app state to IDLE to make sure to close possible device connections
     curr_app_state = IDLE;
 }
 
-void BSP::Controller::start_serial_reading(std::string port, size_t baud) {
+void LP::Controller::start_serial_reading(std::string port, size_t baud) {
     std::thread([port, baud]() {
         // lock the entire thread to ensure that there won't be any other overlapping serial reading threads
         std::lock_guard<std::mutex> lock(thread_mtx);

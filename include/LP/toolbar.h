@@ -1,13 +1,13 @@
 #ifndef __TOOLBAR_H__
 #define __TOOLBAR_H__
 
-#include "BSP/shared.h"
+#include "LP/shared.h"
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace BSP {
+namespace LP {
     class ToolBar {
         private:
             std::optional<size_t> combobox_port_index;

@@ -1,8 +1,8 @@
 #ifndef __APP_H__
 #define __APP_H__
 
-#include <BSP/telemetry.h>
-#include <BSP/toolbar.h>
+#include <LP/telemetry.h>
+#include <LP/toolbar.h>
 #include <functional>
 #include <imgui.h>
 #include <string>
@@ -12,7 +12,7 @@ struct ImGuiIO;
 struct ImGuiStyle;
 struct ImPlotStyle;
 
-namespace BSP {
+namespace LP {
     class Window {
         private: 
             static GLFWwindow*  window;

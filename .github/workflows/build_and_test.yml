@@ -18,7 +18,7 @@ jobs:
         - name: Checkout repository
           uses: actions/checkout@v4
 
-        - name: Install Linux dependencies
+        - name: Run apt-get update
           if: runner.os == 'Linux'
           run: |
             sudo apt-get update
@@ -42,7 +42,7 @@ jobs:
           run: |
             cmake -S . -B build/Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
             cmake --build build/Release
-        
+
         - name: Run tests
           working-directory: ./build/Release
           run: ctest --output-on-failure

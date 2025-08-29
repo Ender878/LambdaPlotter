@@ -1,7 +1,7 @@
 #include <array>
-#include <BSP/shared.h>
+#include <LP/shared.h>
 
-namespace BSP {
+namespace LP {
     const std::array<combobox_tuple_t, BAUD_RATES_SIZE> baud_rates = {
         {
             {"300",     B300},
