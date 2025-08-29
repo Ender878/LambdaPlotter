@@ -2,7 +2,8 @@
 #include <LP/controller.h>
 #include <LP/shared.h>
 #include <exception>
-#include <print>
+#include <iostream>
+#include <ostream>
 
 int main(void) {
     try {
@@ -15,7 +16,7 @@ int main(void) {
         LP::Controller::shutdown();
         LP::Window::destroy();
     } catch (const std::exception& e) {
-        std::println(stderr, "ERROR: {}", e.what());
+        std::cerr << "ERROR: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 

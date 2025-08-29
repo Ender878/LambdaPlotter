@@ -10,8 +10,8 @@
 #include <cstddef>
 #include <cstdio>
 #include <exception>
+#include <iostream>
 #include <mutex>
-#include <print>
 #include <string>
 #include <thread>
 #include <vector>
@@ -25,7 +25,7 @@ std::mutex      LP::Controller::thread_mtx;
 
 void LP::Controller::update() {
     // get available serial ports
-    std::vector<std::string> &serial_ports = Serial::getSerialPorts(toolbar.getRefreshButton());
+    std::vector<std::string> &serial_ports = Serial::get_serial_ports(toolbar.getRefreshButton());
 
     // update toolbar data
     toolbar.update_serial_ports(serial_ports);
@@ -66,7 +66,7 @@ void LP::Controller::update() {
 }
 
 void LP::Controller::save_file() {
-    std::string device_name = Serial::getLastOpenPort();
+    std::string device_name = Serial::get_last_open_port();
     device_name.erase(0, device_name.find_last_of("/") + 1);
     std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";        
 
@@ -91,7 +91,7 @@ void LP::Controller::start_serial_reading(std::string port, size_t baud) {
         std::lock_guard<std::mutex> lock(thread_mtx);
         try {
 
-            std::string last_open_port = Serial::getLastOpenPort();
+            std::string last_open_port = Serial::get_last_open_port();
 
             {
                 std::lock_guard<std::mutex> lock(tel.get_data_mtx());
@@ -119,14 +119,15 @@ void LP::Controller::start_serial_reading(std::string port, size_t baud) {
                     }
                     
                 } else {
-                    Serial::setLastOpenPort("");
+                    Serial::set_last_open_port("");
                     curr_app_state = IDLE;
                 }
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_READ_DELAY));
             }
         } catch (const std::exception& e) {
-            std::println(stderr, "Error while opening port: {}", e.what());
+            std::cerr << "Error while opening port:" << e.what() << std::endl;
+            // std::println(stderr, "Error while opening port: {}", e.what());
             curr_app_state = IDLE;
         }
     }).detach();

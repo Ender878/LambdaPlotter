@@ -154,10 +154,10 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
             ImGui::BeginDisabled();
         }
 
-        uint16_t parity      = Serial::getParity();
-        uint16_t stop_bits   = Serial::getStopBits();
-        uint16_t data_bits   = Serial::getDataBits();
-        uint16_t flow_ctrl   = Serial::getFlowCtrl();
+        uint16_t parity      = Serial::get_parity();
+        uint16_t stop_bits   = Serial::get_stop_bits();
+        uint16_t data_bits   = Serial::get_data_bits();
+        uint16_t flow_ctrl   = Serial::get_flow_ctrl();
 
         // === Parity bit ===
         ImGui::Text("Parity:");
@@ -225,10 +225,10 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
             flow_ctrl = 2;
         }
 
-        Serial::setParity(parity);
-        Serial::setStopBits(stop_bits);
-        Serial::setDataBits(data_bits);
-        Serial::setFlowCtrl(flow_ctrl);
+        Serial::set_parity(parity);
+        Serial::set_stop_bits(stop_bits);
+        Serial::set_data_bits(data_bits);
+        Serial::set_flow_ctrl(flow_ctrl);
 
         if (app_state == READING) {
             ImGui::EndDisabled();

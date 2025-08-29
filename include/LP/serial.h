@@ -67,19 +67,19 @@ namespace LP {
              */
             void close();
 
-            static std::vector<std::string>& getSerialPorts(bool refresh = false);
-            static std::string getLastOpenPort();
-            static void setLastOpenPort(const char* port);
+            static std::vector<std::string>& get_serial_ports(bool refresh = false);
+            static std::string get_last_open_port();
+            static void set_last_open_port(const char* port);
 
-            static inline void setParity(uint16_t value)   { parity = value; }
-            static inline void setStopBits(uint16_t value) { stop_bits = value; }
-            static inline void setDataBits(uint16_t value) { data_bits = value; }
-            static inline void setFlowCtrl(uint16_t value) { flow_ctrl = value; }
+            static inline void set_parity(uint16_t value)    { parity = value; }
+            static inline void set_stop_bits(uint16_t value) { stop_bits = value; }
+            static inline void set_data_bits(uint16_t value) { data_bits = value; }
+            static inline void set_flow_ctrl(uint16_t value) { flow_ctrl = value; }
 
-            static inline uint16_t getParity()   { return parity; }
-            static inline uint16_t getStopBits() { return stop_bits; }
-            static inline uint16_t getDataBits() { return data_bits; }
-            static inline uint16_t getFlowCtrl() { return flow_ctrl; }
+            static inline uint16_t get_parity()    { return parity; }
+            static inline uint16_t get_stop_bits() { return stop_bits; }
+            static inline uint16_t get_data_bits() { return data_bits; }
+            static inline uint16_t get_flow_ctrl() { return flow_ctrl; }
     };
 }
 

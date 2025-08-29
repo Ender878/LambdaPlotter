@@ -125,7 +125,7 @@ LP::Serial::~Serial() {
     ::close(serial_port_fd);
 }
 
-std::vector<std::string>& LP::Serial::getSerialPorts(bool refresh) {
+std::vector<std::string>& LP::Serial::get_serial_ports(bool refresh) {
     if (refresh) {
         serial_ports = read_system_ports();
     }
@@ -149,11 +149,11 @@ std::vector<std::string> LP::Serial::read_system_ports() {
     return ports;
 }
 
-std::string LP::Serial::getLastOpenPort() {
+std::string LP::Serial::get_last_open_port() {
     return last_open_port;
 }
 
-void LP::Serial::setLastOpenPort(const char* port) {
+void LP::Serial::set_last_open_port(const char* port) {
     last_open_port = port;
 }
 

@@ -11,9 +11,10 @@
 #include <format>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <iterator>
 #include <mutex>
-#include <print>
+#include <ostream>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -182,18 +183,18 @@ void LP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_ma
 
     // check if the file was opened correctly
     if (!dump.is_open()) {
-        std::println(stderr, "Error while opening dump file.");
+        std::cerr << "Error while opening dump file." << std::endl;
         return;
     }
 
     // === write labels ===
-    std::print(dump, "times");
+    dump << "times";
 
     std::lock_guard<std::mutex> lock(data_mtx);
     for (const auto& el : data) {
-        if (ch_styles[el.first].show) std::print(dump, ";{}", el.second.name);
+        if (ch_styles[el.first].show) dump << ";" << el.second.name; //std::print(dump, ";{}", el.second.name);
     }
-    std::println(dump);
+    dump << "\n";
 
     // get time window
     auto min_x_it = std::lower_bound(times.begin(), times.end(), limits.x_min);
@@ -208,7 +209,7 @@ void LP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_ma
 
     // write data to file
     for (auto it = min_x_it; it <= max_x_it; it++) {
-        std::print(dump, "{}", (ts == DATETIME) ? format_datetime(*it) : std::format("{:.0f}", *it));
+        dump << ((ts == DATETIME) ? format_datetime(*it) : std::format("{:.0f}", *it));
 
         for (const auto& el : data) {
             if (!ch_styles[el.first].show) continue;
@@ -224,11 +225,11 @@ void LP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_ma
                 }
             }
 
-            std::print(dump, ";{}", el_str);     
+            dump << ";" << el_str;
         }
-        std::println(dump);
+        dump << "\n";
     }
-    std::println("Dump done!!");
+    std::cout << "Dump done!!";
 
     dump.close();
 }
