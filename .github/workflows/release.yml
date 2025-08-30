@@ -1,12 +1,9 @@
-name: Build and Test
+name: Create Release
 
 on:
-    push:
-        branches: [ "master" ]
-        tags:
-            'v*.*.*'
-    pull_request:
-        branches: [ "master" ]
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
     build:
@@ -44,7 +41,7 @@ jobs:
           if: runner.os == 'Windows'
           run: conan install . --build=missing -s build_type=Release
 
-        - name: Build with CMake
+        - name: Build with CMake (Linux/macOS)
           if: runner.os != 'Windows'
           run: |
             cmake --preset conan-release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
@@ -56,7 +53,7 @@ jobs:
             cmake --preset conan-default -DCMAKE_BUILD_TYPE=Release
             cmake --build build --config Release
 
-        - name: Run tests
+        - name: Run tests (Linux/macOS)
           if: runner.os != 'Windows'
           working-directory: ./build/Release
           run: ctest -C Release --output-on-failure
@@ -70,7 +67,7 @@ jobs:
           if: runner.os != 'Windows'
           run: |
             mkdir -p release
-            cp build/Release/lambda_plotter release/
+            cp build/Release/lambda_plotter README.md LICENSE release/
             tar -czvf lambda_plotter-${{ runner.os }}.tar.gz -C release .
 
         - name: Prepare package (Windows)
@@ -88,21 +85,20 @@ jobs:
         
     create_release:
         name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
         needs: build
         runs-on: ubuntu-latest
         permissions: 
-            contents: write
+          contents: write
 
         steps:
-            - name: Download release assests
-              uses: actions/download-artifact@v4
-              with:
-                path: release-assets
-            
-            - name: Create Release and Upload Assets
-              uses: softprops/action-gh-release@v2
-              with:
-                files: release-assets/*/*
-                generate_release_notes: true
+          - name: Download release assests
+            uses: actions/download-artifact@v4
+            with:
+              path: release-assets
+        
+          - name: Create Release and Upload Assets
+            uses: softprops/action-gh-release@v2
+            with:
+              files: release-assets/*/*
+              generate_release_notes: true
 

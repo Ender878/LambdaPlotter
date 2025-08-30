@@ -227,4 +227,3 @@ unsigned char lucide_ttf[] = {
 };
 
 unsigned int lucide_ttf_len = 2692;
-  

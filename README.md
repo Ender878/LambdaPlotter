@@ -1,6 +1,6 @@
 # LambdaPlotter
 
-[![Build Status](https://github.com/ender878/LambdaPlotter/actions/workflows/cicd.yml/badge.svg)](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml)
+[![Build Status](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CMakeLists.txt)
 

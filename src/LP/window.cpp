@@ -119,11 +119,14 @@ void LP::Window::destroy() {
 }
 
 std::string LP::Window::render_save_fd(const char* default_path) {
+    // filter patterns
+    const char* filter_pattern[2] = { "*.csv", "*.*" };
+    
     const char* path = tinyfd_saveFileDialog(
         "Save data", 
         default_path, 
-        0, 
-        nullptr, 
+        2, 
+        filter_pattern, 
         "CSV Files (*.csv)"
     );
 

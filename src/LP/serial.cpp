@@ -107,7 +107,7 @@ LP::Serial::Serial(const char* port, size_t baud) {
     // == INPUT FLAGS ==
     tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); // Disable any special handling of received bytes
 
-    tty.c_cc[VTIME] = 1; // timeout of 1 decisecond
+    tty.c_cc[VTIME] = 0; // timeout of 1 decisecond
     tty.c_cc[VMIN]  = 1; // wait for at least one byte
 
     // set baud rate

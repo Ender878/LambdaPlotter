@@ -67,7 +67,9 @@ void LP::Controller::update() {
 
 void LP::Controller::save_file() {
     std::string device_name = Serial::get_last_open_port();
+    #ifndef _WIN32
     device_name.erase(0, device_name.find_last_of("/") + 1);
+    #endif
     std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";        
 
     // sanitize default file name (remove ':' from unix timestamp)

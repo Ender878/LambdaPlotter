@@ -23,7 +23,7 @@
 #include <vector>
 
 LP::Telemetry::Telemetry() 
-    : start_time(std::chrono::system_clock::now()), frame_fragments("") {}
+    : frame_fragments(""), start_time(std::chrono::system_clock::now()) {}
 
 std::string LP::Telemetry::parse_serial(std::vector<char>& buffer) {
     // char buffer to valid string
@@ -201,7 +201,7 @@ void LP::Telemetry::dump_data(std::string path, Limits limits, std::unordered_ma
     auto max_x_it = std::upper_bound(times.begin(), times.end(), limits.x_max);
 
     // check if found min is within the range
-    if (min_x_it != times.end() && *min_x_it < limits.x_min || *min_x_it > limits.x_max) {
+    if ((min_x_it != times.end()) && (*min_x_it < limits.x_min || *min_x_it > limits.x_max)) {
         min_x_it  = times.end();
     }
 

@@ -1,0 +1,67 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "master" ]
+    tags-ignore:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+    build:
+        strategy:
+            matrix:
+                os: [ubuntu-latest, macos-latest, windows-latest]
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Run apt-get update
+          if: runner.os == 'Linux'
+          run: |
+            sudo apt-get update
+        
+        - name: Setup Conan
+          uses: conan-io/setup-conan@v1
+          with:
+            cache_packages: true
+
+        - name: Install Conan dependencies (Linux)
+          if: runner.os == 'Linux'
+          run: |
+            CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
+        
+        - name: Install Conan dependencies (macOS)
+          if: runner.os == 'macOS'
+          run: |
+            CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release
+
+        - name: Install Conan dependencies (Windows)
+          if: runner.os == 'Windows'
+          run: conan install . --build=missing -s build_type=Release
+
+        - name: Build with CMake (Linux/macOS)
+          if: runner.os != 'Windows'
+          run: |
+            cmake --preset conan-release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+            cmake --build build/Release
+
+        - name: Build with CMake (Windows)
+          if: runner.os == 'Windows'
+          run: |
+            cmake --preset conan-default -DCMAKE_BUILD_TYPE=Release
+            cmake --build build --config Release
+
+        - name: Run tests (Linux/macOS)
+          if: runner.os != 'Windows'
+          working-directory: ./build/Release
+          run: ctest -C Release --output-on-failure
+
+        - name: Run tests (Windows)
+          if: runner.os == 'Windows'
+          working-directory: ./build
+          run: ctest -C Release --output-on-failure

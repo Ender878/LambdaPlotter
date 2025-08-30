@@ -46,9 +46,17 @@ target_link_libraries(lambda_plotter PRIVATE lplib)
 
 # --- Compiler Flags ---
 target_compile_options(lplib PRIVATE
-    $<$<CONFIG:Debug>:-g>
-    $<$<CONFIG:Release>:-O3 -DNDEBUG>
+    # Debug flags
+    $<$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:GNU,Clang>>:-g>
+    
+    # Release flags
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU,Clang>>:-O3>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Ox>
+    $<$<CONFIG:Release>:-DNDEBUG>
+    
+    # Warnings and other flags
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
 )
 

@@ -36,7 +36,6 @@ namespace LP {
             std::unordered_map<int, ChannelStyle> plot_attributes;
             PlotStyle plot_style;
             size_t    combobox_time_index;
-            bool      clear_button;
 
             /**
              * @brief initialize a new channel plot style with key `id`, or overwrite it if the key already exists
@@ -61,7 +60,7 @@ namespace LP {
              */
             void render_tooltip(const char* message);
         public:
-            PlotView() : combobox_time_index(2), clear_button(false) {}
+            PlotView() : combobox_time_index(2) {}
 
             /**
              * @brief Render the plot
