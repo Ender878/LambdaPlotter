@@ -22,7 +22,7 @@ file(GLOB TINYFD "./src/tinyfd/*.c")
 # --- Find Packages ---
 find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
-find_package(glew  REQUIRED)
+find_package(glad  REQUIRED)
 
 add_library(lplib STATIC
     ${LAMBDAPLOTTER}
@@ -36,7 +36,7 @@ target_include_directories(lplib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(lplib PUBLIC imgui::imgui glfw GLEW::GLEW)
+target_link_libraries(lplib PUBLIC imgui::imgui glfw glad::glad)
 
 add_executable(lambda_plotter
     src/main.cpp 
@@ -44,13 +44,12 @@ add_executable(lambda_plotter
 
 target_link_libraries(lambda_plotter PRIVATE lplib)
 
-target_compile_definitions(lambda_plotter PRIVATE GLEW_STATIC)
-
 # --- Compiler Flags ---
-target_compile_options(lambda_plotter PRIVATE
+target_compile_options(lplib PRIVATE
     $<$<CONFIG:Debug>:-g>
     $<$<CONFIG:Release>:-O3 -DNDEBUG>
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
 )
 
 # --- Testing ---

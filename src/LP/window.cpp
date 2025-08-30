@@ -1,3 +1,5 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <LP/window.h>
 #include "../fonts/lucide.h"
 #include "../fonts/roboto.h"
@@ -6,7 +8,6 @@
 #include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
 #include <LP/serial.h>
-#include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <stdexcept>
@@ -32,16 +33,22 @@ void LP::Window::init(int t_width, int t_height, const char* title) {
     // set opengl version
     const char *glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // create window
     window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 
     if (!window) {
+        glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
 
     glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        throw std::runtime_error("Failed to initialize GLAD");
+    }
+
     glfwSwapInterval(1);
 
     IMGUI_CHECKVERSION();
@@ -139,7 +146,7 @@ void LP::Window::loadDefaultFont() {
 }
 
 void LP::Window::loadIconFont() {
-    const ImWchar icon_ranges[] = { 0xE132, 0xE158, 0 };
+    static const ImWchar icon_ranges[] = { 0xE132, 0xE158, 0 };
 
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;

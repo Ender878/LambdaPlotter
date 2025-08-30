@@ -237,8 +237,8 @@ LP::Serial::Serial(const char* port, size_t baud) {
     // Set timeouts
     COMMTIMEOUTS timeouts = {0};
     timeouts.ReadIntervalTimeout        = MAXDWORD;  // Max time between bytes (ms)
-    timeouts.ReadTotalTimeoutMultiplier = 1;         // Per-byte timeout
-    timeouts.ReadTotalTimeoutConstant   = 10;        // Constant timeout (ms)
+    timeouts.ReadTotalTimeoutMultiplier = 0;         // Per-byte timeout
+    timeouts.ReadTotalTimeoutConstant   = 0;         // Constant timeout (ms)
     
     // set timeouts settings
     if (!SetCommTimeouts(serial_port_handle, &timeouts)) {

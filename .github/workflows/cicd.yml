@@ -24,7 +24,6 @@ jobs:
           if: runner.os == 'Linux'
           run: |
             sudo apt-get update
-            sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev
         
         - name: Setup Conan
           uses: conan-io/setup-conan@v1

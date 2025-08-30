@@ -57,10 +57,13 @@ Conan will install all the dependencies specified inside `conanfile.txt`.
 Once all the dependencies are installed, we can finally build the project:
 
 ```bash
-cmake -S . -B build/Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=<Release|Debug>
+cmake --preset <conan-debug|conan-release> -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
 
 cmake --build build/<Release|Debug>
 ```
+
+> [!NOTE]
+> On Windows Visual Studio build projects, you have to specify `conan-default` as the preset.
 
 Once compiled, the executable will be inside `build/Release` or `build/Debug`, depending on what you choose.
 
