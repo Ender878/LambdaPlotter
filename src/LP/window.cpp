@@ -11,7 +11,6 @@
 #include <imgui_internal.h>
 #include <stdexcept>
 #include <string>
-#include <termios.h>
 
 #include "../bindings/imgui_impl_glfw.h"
 

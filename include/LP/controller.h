@@ -25,7 +25,7 @@ namespace LP {
              * @brief Start to read from the serial port on another thread.
              * 
              * @param port // the serial port's file path
-             * @param baud // baud rate used for reading from the port (should be specified from one of the defines from `termios.h`)
+             * @param baud // baud rate used for reading from the port
              */
             static void start_serial_reading(std::string port, size_t baud);
 

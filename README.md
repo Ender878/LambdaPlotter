@@ -22,7 +22,7 @@
 
 ### Prerequisites
 
-To compile this project from source, make sure you have a compiler that supports **C++23** (for better compatibility, I highly suggest using **clang**) and have **Python** and **CMake** installed.
+To compile this project from source, make sure you have a compiler that supports **C++20** (for better compatibility, I highly suggest using **clang**) and have **Python** and **CMake** installed.
 
 ### Install conan
 

@@ -166,12 +166,12 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
             parity = 0;
         }
 
-        if (ImGui::RadioButton("Even###ParityEV", parity == PARENB)) {
-            parity = PARENB;
+        if (ImGui::RadioButton("Even###ParityEV", parity == 1)) {
+            parity = 1;
         }
 
-        if (ImGui::RadioButton("Odd###ParityODD", parity == (PARENB | PARODD))) {
-            parity = PARENB | PARODD;
+        if (ImGui::RadioButton("Odd###ParityODD", parity == 2)) {
+            parity = 2;
         }
 
         // === Stop bits ===
@@ -190,24 +190,24 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
         // === Data bits ===
         ImGui::Text("Data bits:");
 
-        if (ImGui::RadioButton("5###Data1", data_bits == CS5)) {
-            data_bits = CS5;
+        if (ImGui::RadioButton("5###Data1", data_bits == LP_CS5)) {
+            data_bits = LP_CS5;
         }
 
         ImGui::SameLine();
 
-        if (ImGui::RadioButton("6###Data2", data_bits == CS6)) {
-            data_bits = CS6;
+        if (ImGui::RadioButton("6###Data2", data_bits == LP_CS6)) {
+            data_bits = LP_CS6;
         }
 
-        if (ImGui::RadioButton("7###Data3", data_bits == CS7)) {
-            data_bits = CS7;
+        if (ImGui::RadioButton("7###Data3", data_bits == LP_CS7)) {
+            data_bits = LP_CS7;
         }
 
         ImGui::SameLine();
 
-        if (ImGui::RadioButton("8###Data4", data_bits == CS8)) {
-            data_bits = CS8;
+        if (ImGui::RadioButton("8###Data4", data_bits == LP_CS8)) {
+            data_bits = LP_CS8;
         }
 
         // === Flow ctrl ===

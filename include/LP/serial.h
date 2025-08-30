@@ -4,17 +4,31 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
-#include <termios.h>
 #include <vector>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <termios.h>
+#endif
 
 #define DEFAULT_BUF_SIZE 1024
 #define FLUSH_DELAY      5
 
+#define LP_CS5 0
+#define LP_CS6 1
+#define LP_CS7 2
+#define LP_CS8 3
+
 namespace LP {
     class Serial {
         private:
+            #ifdef _WIN32
+            HANDLE serial_port_handle;
+            #else
             int serial_port_fd;
-            
+            #endif
+
             static uint16_t parity;
             static uint16_t stop_bits;
             static uint16_t data_bits;
@@ -54,12 +68,14 @@ namespace LP {
              */
             bool is_port_connected() const;
 
+            #ifndef _WIN32
             /**
              * @brief Get the file descriptor object
              * 
              * @return the file descriptor
              */
             int get_file_descriptor() const;
+            #endif
 
             /**
              * @brief Close the serial port and unlock it

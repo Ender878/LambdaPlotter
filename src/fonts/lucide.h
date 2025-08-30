@@ -9,7 +9,9 @@
 #define ICON_LC_PAUSE       "\uE132"
 #define ICON_LC_SETTINGS    "\uE158"
 
-extern unsigned char lucide_ttf[];
-extern unsigned int  lucide_ttf_len;
+extern "C" {
+    extern unsigned char lucide_ttf[];
+    extern unsigned int  lucide_ttf_len;
+}
 
 #endif

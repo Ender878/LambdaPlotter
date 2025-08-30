@@ -2,7 +2,6 @@
 #define __BSP_SHARED_H__
 
 #include <array>
-#include <termios.h>
 
 #define MIN_WIN_WIDTH           1375
 #define MIN_WIN_HEIGHT          700
