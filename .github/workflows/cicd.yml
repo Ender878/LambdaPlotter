@@ -3,6 +3,8 @@ name: Build and Test
 on:
     push:
         branches: [ "master" ]
+        tags:
+            'v*.*.*'
     pull_request:
         branches: [ "master" ]
 
@@ -22,6 +24,7 @@ jobs:
           if: runner.os == 'Linux'
           run: |
             sudo apt-get update
+            sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev libwayland-dev libxkbcommon-dev
         
         - name: Setup Conan
           uses: conan-io/setup-conan@v1
@@ -63,3 +66,44 @@ jobs:
           if: runner.os == 'Windows'
           working-directory: ./build
           run: ctest -C Release --output-on-failure
+
+        - name: Prepare package (Linux/macOS)
+          if: runner.os != 'Windows'
+          run: |
+            mkdir -p release
+            cp build/Release/lambda_plotter release/
+            tar -czvf lambda_plotter-${{ runner.os }}.tar.gz -C release .
+
+        - name: Prepare package (Windows)
+          if: runner.os == 'Windows'
+          run: |
+            Compress-Archive -Path build/Release/lambda_plotter.exe -DestinationPath lambda_plotter-${{ runner.os }}.zip
+        
+        - name: Upload Artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: release-asset-${{ runner.os }}
+            path: |
+              lambda_plotter-*.tar.gz
+              lambda_plotter-*.zip
+        
+    create_release:
+        name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs: build
+        runs-on: ubuntu-latest
+        permissions: 
+            contents: write
+
+        steps:
+            - name: Download release assests
+              uses: actions/download-artifact@v4
+              with:
+                path: release-assets
+            
+            - name: Create Release and Upload Assets
+              uses: softprops/action-gh-release@v2
+              with:
+                files: release-assets/*/*
+                generate_release_notes: true
+

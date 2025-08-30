@@ -44,6 +44,8 @@ add_executable(lambda_plotter
 
 target_link_libraries(lambda_plotter PRIVATE lplib)
 
+target_compile_definitions(lambda_plotter PRIVATE GLEW_STATIC)
+
 # --- Compiler Flags ---
 target_compile_options(lambda_plotter PRIVATE
     $<$<CONFIG:Debug>:-g>

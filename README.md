@@ -1,6 +1,6 @@
 # LambdaPlotter
 
-[![Build Status](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml)
+[![Build Status](https://github.com/ender878/LambdaPlotter/actions/workflows/cicd.yml/badge.svg)](https://github.com/ender878/LambdaPlotter/actions/workflows/build_and_test.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CMakeLists.txt)
 
@@ -22,7 +22,7 @@
 
 ### Prerequisites
 
-To compile this project from source, make sure you have a compiler that supports **C++20** (for better compatibility, I highly suggest using **clang**) and have **Python** and **CMake** installed.
+To compile this project from source, make sure you have a compiler that supports **C++20** (for better compatibility, I highly suggest using **clang** or **MSVC**, for Windows) and have **Python** and **CMake** installed.
 
 ### Install conan
 
