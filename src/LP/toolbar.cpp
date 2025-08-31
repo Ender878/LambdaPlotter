@@ -1,10 +1,10 @@
-#include <LP/toolbar.h>
-#include <LP/serial.h>
 #include "../fonts/lucide.h"
 #include "LP/shared.h"
+#include <LP/serial.h>
+#include <LP/toolbar.h>
 
-#include <imgui.h>
 #include <algorithm>
+#include <imgui.h>
 #include <string>
 #include <vector>
 
@@ -19,8 +19,12 @@ void LP::ToolBar::update_serial_ports(const std::vector<std::string> &serial_por
             // the pointed value exists in the list and reassing the correct
             // index if the pointed element no longer exist, set the index to
             // null
-            if (std::any_of(serial_ports.begin(), serial_ports.end(), [this](std::string v) { return v == current_port; })) {
-                combobox_port_index = std::distance(serial_ports.begin(), std::find(serial_ports.begin(), serial_ports.end(), current_port));
+            if (std::any_of(serial_ports.begin(), serial_ports.end(), [this](std::string v) {
+                    return v == current_port;
+                })) {
+                combobox_port_index = std::distance(
+                    serial_ports.begin(),
+                    std::find(serial_ports.begin(), serial_ports.end(), current_port));
             } else {
                 combobox_port_index = std::nullopt;
             }
@@ -35,7 +39,7 @@ LP::app_state_t LP::ToolBar::get_new_app_state(const app_state_t &curr_app_state
 
     if (open_close_button) {
         // if we are not already reading and there is a port selected, start
-        // reading. if we are reading and the connection button has 
+        // reading. if we are reading and the connection button has
         // been pressed, stop reading.
         if (combobox_port_index.has_value() && curr_app_state == IDLE) {
             state = READING;
@@ -47,23 +51,25 @@ LP::app_state_t LP::ToolBar::get_new_app_state(const app_state_t &curr_app_state
     return state;
 }
 
-void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::vector<std::string>& serial_ports) {
+void LP::ToolBar::render(app_state_t app_state, bool no_telemetry,
+                         const std::vector<std::string> &serial_ports) {
     // get prev selected port and baud rate
-    const char* selected_port = combobox_port_index.has_value() && combobox_port_index <= serial_ports.size() 
-        ? serial_ports[combobox_port_index.value()].c_str() 
-        : "";
-    const char* selected_baud = LP::baud_rates[combobox_baud_index].str;
+    const char *selected_port =
+        combobox_port_index.has_value() && combobox_port_index <= serial_ports.size()
+            ? serial_ports[combobox_port_index.value()].c_str()
+            : "";
+    const char *selected_baud = LP::baud_rates[combobox_baud_index].str;
 
     ImGui::SeparatorText("Serial interface");
 
     if (ImGui::BeginTable("##toolbar_layout", 2)) {
-        ImGui::TableSetupColumn("Left",  ImGuiTableColumnFlags_WidthStretch, 0.4f);
+        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.4f);
         ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.6f);
 
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
-        // ====== Serial ports combo box ====== 
+        // ====== Serial ports combo box ======
         ImGui::Text("Serial port");
         ImGui::TableNextColumn();
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 5);
@@ -75,11 +81,10 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
                     combobox_port_index = i;
                     ImGui::SetItemDefaultFocus();
                 }
-
             }
             ImGui::EndCombo();
         }
-        
+
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
@@ -95,7 +100,6 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
                     combobox_baud_index = i;
                     ImGui::SetItemDefaultFocus();
                 }
-
             }
             ImGui::EndCombo();
         }
@@ -112,29 +116,33 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
-        // calc buttons size        
+        // calc buttons size
         ImVec2 buttons_size;
         buttons_size.x = buttons_size.y = ICON_SIZE + (ICON_SIZE / 6.0f) * 2;
 
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() +
+                             (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, ICON_SIZE);
         refresh_button = ImGui::Button(ICON_LC_REFRESH, buttons_size);
 
         ImGui::TableNextColumn();
-        
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
-        open_close_button = ImGui::Button(app_state == READING ? ICON_LC_PAUSE : ICON_LC_PLAY, buttons_size);
-        
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() +
+                             (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+        open_close_button =
+            ImGui::Button(app_state == READING ? ICON_LC_PAUSE : ICON_LC_PLAY, buttons_size);
+
         ImGui::TableNextColumn();
-        
+
         if (no_telemetry) {
             ImGui::BeginDisabled();
         }
-    
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() +
+                             (ImGui::GetContentRegionAvail().x - buttons_size.x) * 0.5);
         save_button = ImGui::Button(ICON_LC_SAVE, buttons_size);
         ImGui::PopStyleVar();
-        
+
         if (no_telemetry) {
             ImGui::EndDisabled();
         }
@@ -147,17 +155,16 @@ void LP::ToolBar::render(app_state_t app_state, bool no_telemetry, const std::ve
         open_close_button = true;
     }
 
-    // =========== ADVANCED SERIAL CONFIG =========== 
+    // =========== ADVANCED SERIAL CONFIG ===========
     if (ImGui::TreeNode("Advanced configuration")) {
-
         if (app_state == READING) {
             ImGui::BeginDisabled();
         }
 
-        uint16_t parity      = Serial::get_parity();
-        uint16_t stop_bits   = Serial::get_stop_bits();
-        uint16_t data_bits   = Serial::get_data_bits();
-        uint16_t flow_ctrl   = Serial::get_flow_ctrl();
+        uint16_t parity    = Serial::get_parity();
+        uint16_t stop_bits = Serial::get_stop_bits();
+        uint16_t data_bits = Serial::get_data_bits();
+        uint16_t flow_ctrl = Serial::get_flow_ctrl();
 
         // === Parity bit ===
         ImGui::Text("Parity:");

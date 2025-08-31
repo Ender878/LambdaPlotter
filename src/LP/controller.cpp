@@ -1,6 +1,6 @@
 #include <LP/controller.h>
-#include <LP/shared.h>
 #include <LP/serial.h>
+#include <LP/shared.h>
 #include <LP/telemetry.h>
 #include <LP/toolbar.h>
 #include <LP/window.h>
@@ -29,7 +29,7 @@ void LP::Controller::update() {
 
     // update toolbar data
     toolbar.update_serial_ports(serial_ports);
-    
+
     LP::Window::render_toolbar([serial_ports]() {
         toolbar.render(curr_app_state, tel.is_empty(), serial_ports);
         plot_view.render_telemetry(tel);
@@ -38,15 +38,18 @@ void LP::Controller::update() {
     });
 
     ImVec2 window_size = Window::getWindowSize();
-    plot_view.render_plot(tel, curr_app_state, window_size.x * 0.25, 0, window_size.x * 0.75, window_size.y);
+    plot_view.render_plot(
+        tel, curr_app_state, window_size.x * 0.25, 0, window_size.x * 0.75, window_size.y);
 
     // get updated app state (if we should read or close)
     curr_app_state = toolbar.get_new_app_state(curr_app_state);
 
-    // check if the state is changed (open/close button pressed or device disconnection while reading)
+    // check if the state is changed (open/close button pressed or device disconnection while
+    // reading)
     if (curr_app_state != prev_app_state) {
         if (curr_app_state == READING) {
-            start_serial_reading(toolbar.getCurrentPort(), LP::baud_rates[toolbar.getComboboxBaudIndex()].value);
+            start_serial_reading(toolbar.getCurrentPort(),
+                                 LP::baud_rates[toolbar.getComboboxBaudIndex()].value);
         } else {
             toolbar.setRefreshButton(true);
         }
@@ -67,10 +70,13 @@ void LP::Controller::update() {
 
 void LP::Controller::save_file() {
     std::string device_name = Serial::get_last_open_port();
-    #ifndef _WIN32
+
+#ifndef _WIN32
     device_name.erase(0, device_name.find_last_of("/") + 1);
-    #endif
-    std::string default_file_name = "bsp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";        
+#endif
+
+    std::string default_file_name =
+        "lp_" + device_name + "_" + Telemetry::format_datetime(Telemetry::get_unix_time()) + ".csv";
 
     // sanitize default file name (remove ':' from unix timestamp)
     std::replace(default_file_name.begin(), default_file_name.end(), ':', '-');
@@ -78,7 +84,10 @@ void LP::Controller::save_file() {
     std::string path = LP::Window::render_save_fd(default_file_name.c_str());
 
     if (!path.empty()) {
-        tel.dump_data(path, plot_view.get_plot_style().limits, plot_view.get_channels_style(), plot_view.get_plot_style().time_style);
+        tel.dump_data(path,
+                      plot_view.get_plot_style().limits,
+                      plot_view.get_channels_style(),
+                      plot_view.get_plot_style().time_style);
     }
 }
 
@@ -89,14 +98,14 @@ void LP::Controller::shutdown() {
 
 void LP::Controller::start_serial_reading(std::string port, size_t baud) {
     std::thread([port, baud]() {
-        // lock the entire thread to ensure that there won't be any other overlapping serial reading threads
-        std::lock_guard<std::mutex> lock(thread_mtx);
+        // lock the entire thread to ensure that there won't be any other overlapping serial reading
+        // threads
+        std::lock_guard<std::mutex> lock_thread(thread_mtx);
         try {
-
             std::string last_open_port = Serial::get_last_open_port();
 
             {
-                std::lock_guard<std::mutex> lock(tel.get_data_mtx());
+                std::lock_guard<std::mutex> lock_data(tel.get_data_mtx());
 
                 if (port != last_open_port) {
                     tel.clear();
@@ -111,7 +120,8 @@ void LP::Controller::start_serial_reading(std::string port, size_t baud) {
             while (curr_app_state == READING) {
                 std::vector<char> buffer;
 
-                // if we can't read from the device, there has been a fatal error or it has been disconnected.
+                // if we can't read from the device, there has been a fatal error or it has been
+                // disconnected.
                 if (device.read(buffer)) {
                     std::string frame_stream = tel.parse_serial(buffer);
 
@@ -119,7 +129,7 @@ void LP::Controller::start_serial_reading(std::string port, size_t baud) {
                         std::lock_guard<std::mutex> lock(tel.get_data_mtx());
                         tel.parse_frame(frame_stream);
                     }
-                    
+
                 } else {
                     Serial::set_last_open_port("");
                     curr_app_state = IDLE;
@@ -127,7 +137,7 @@ void LP::Controller::start_serial_reading(std::string port, size_t baud) {
 
                 std::this_thread::sleep_for(std::chrono::milliseconds(THREAD_READ_DELAY));
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << "Error while opening port:" << e.what() << std::endl;
             // std::println(stderr, "Error while opening port: {}", e.what());
             curr_app_state = IDLE;

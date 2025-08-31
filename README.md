@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](CMakeLists.txt)
 
-![LambdaPlotter Screenshot](./assets/plot.png)
+![LambdaPlotter Screenshot](./.github/plot.png)
 
 **LambdaPlotter** is a fast and lightweight serial plotter useful for reading and plotting any type of serial data in real time.
 
@@ -63,7 +63,7 @@ cmake --build build/<Release|Debug>
 ```
 
 > [!NOTE]
-> On Windows Visual Studio build projects, you have to specify `conan-default` as the preset.
+> On Windows MSVC builds, you may have to specify `conan-default` as the preset.
 
 Once compiled, the executable will be inside `build/Release` or `build/Debug`, depending on what you choose.
 

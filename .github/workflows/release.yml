@@ -6,6 +6,24 @@ on:
       - 'v*.*.*'
 
 jobs:
+    # clang_format:
+    #     name: ClangFormat check
+    #     runs-on: ubuntu-latest
+        
+    #     steps:
+    #     - name: Checkout repository
+    #       uses: actions/checkout@v4
+
+    #     - name: Get clang-format
+    #       run: |
+    #         sudo apt-get update
+    #         sudo apt-get install clang-format-20
+    #     - name: Format code
+    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp'  -or -iname '*.h' | xargs clang-format -i -style=file
+
+    #     - name: Check diff
+    #       run: git diff --exit-code
+
     build:
         strategy:
             matrix:
@@ -17,10 +35,11 @@ jobs:
         - name: Checkout repository
           uses: actions/checkout@v4
 
-        - name: Run apt-get update
+        - name: Run apt-get update and install dependencies
           if: runner.os == 'Linux'
           run: |
             sudo apt-get update
+            sudo apt-get install libgtk-3-dev
         
         - name: Setup Conan
           uses: conan-io/setup-conan@v1
@@ -63,17 +82,26 @@ jobs:
           working-directory: ./build
           run: ctest -C Release --output-on-failure
 
-        - name: Prepare package (Linux/macOS)
-          if: runner.os != 'Windows'
+        - name: Prepare package (Linux)
+          if: runner.os == 'Linux'
           run: |
             mkdir -p release
             cp build/Release/lambda_plotter README.md LICENSE release/
             tar -czvf lambda_plotter-${{ runner.os }}.tar.gz -C release .
 
+        - name: Prepare package (MacOS)
+          if: runner.os == 'macOS'
+          run: |
+            zip -r lambda_plotter-${{ runner.os }}.zip build/Release/lambda_plotter.app README.md LICENSE
+
         - name: Prepare package (Windows)
           if: runner.os == 'Windows'
           run: |
-            Compress-Archive -Path build/Release/lambda_plotter.exe -DestinationPath lambda_plotter-${{ runner.os }}.zip
+            mkdir release
+            copy build\Release\lambda_plotter.exe release\
+            copy README.md release\
+            copy LICENSE release\
+            Compress-Archive -Path release\* -DestinationPath lambda_plotter-${{ runner.os }}.zip
         
         - name: Upload Artifacts
           uses: actions/upload-artifact@v4

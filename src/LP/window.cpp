@@ -1,39 +1,72 @@
-#include <glad/glad.h>
+#define GLFW_INCLUDE_NONE
+
 #include <GLFW/glfw3.h>
-#include <LP/window.h>
+
+#include "../bindings/imgui_impl_opengl3.h"
 #include "../fonts/lucide.h"
 #include "../fonts/roboto.h"
-#include <LP/shared.h>
-#include "../tinyfd/tinyfiledialogs.h"
-#include "../bindings/imgui_impl_opengl3.h"
 #include "../implot/implot.h"
 #include <LP/serial.h>
+#include <LP/shared.h>
+#include <LP/window.h>
+#include <glad/glad.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <nfd.h>
 #include <stdexcept>
 #include <string>
 
 #include "../bindings/imgui_impl_glfw.h"
 
-GLFWwindow*     LP::Window::window       = nullptr;
-ImGuiIO*        LP::Window::io           = nullptr;
-ImGuiStyle*     LP::Window::imgui_style  = nullptr;
-ImPlotStyle*    LP::Window::implot_style = nullptr;
-int LP::Window::m_width  = 0;
-int LP::Window::m_height = 0;
+#include <LP/icon_data.h>
 
-void LP::Window::init(int t_width, int t_height, const char* title) {
+#define STB_IMAGE_IMPLEMENTATION
+
+#include <stb/stb_image.h>
+
+GLFWwindow  *LP::Window::window       = nullptr;
+ImGuiIO     *LP::Window::io           = nullptr;
+ImGuiStyle  *LP::Window::imgui_style  = nullptr;
+ImPlotStyle *LP::Window::implot_style = nullptr;
+int          LP::Window::m_width      = 0;
+int          LP::Window::m_height     = 0;
+
+void LP::Window::init(int t_width, int t_height, const char *title) {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW.");
     }
+
+#ifdef _WIN32
+#include <windows.h>
+    // Hide console if needed
+    ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
 
     m_width  = t_width;
     m_height = t_height;
 
     // set opengl version
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+    // GL ES 2.0 + GLSL 100
+    const char *glsl_version = "#version 100";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+#elif defined(__APPLE__)
+    // GL 3.2 + GLSL 150
+    const char *glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
+#else
+    // GL 3.0 + GLSL 130
     const char *glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    // glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
+#endif
 
     // create window
     window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
@@ -45,6 +78,8 @@ void LP::Window::init(int t_width, int t_height, const char* title) {
 
     glfwMakeContextCurrent(window);
 
+    load_icon();
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
@@ -55,8 +90,8 @@ void LP::Window::init(int t_width, int t_height, const char* title) {
     ImGui::CreateContext();
     ImPlot::CreateContext();
 
-    io = &ImGui::GetIO();
-    imgui_style = &ImGui::GetStyle();
+    io           = &ImGui::GetIO();
+    imgui_style  = &ImGui::GetStyle();
     implot_style = &ImPlot::GetStyle();
 
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -65,7 +100,7 @@ void LP::Window::init(int t_width, int t_height, const char* title) {
 
     loadDefaultFont();
     loadIconFont();
-    
+
     setDarkStyle();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -93,15 +128,13 @@ bool LP::Window::render_mainloop(std::function<void()> content) {
 }
 
 void LP::Window::render_toolbar(std::function<void()> content) {
-    ImGui::SetNextWindowPos(ImVec2(0, 0)); 
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(m_width * 0.25, m_height));
 
-    if (ImGui::Begin("MenuBar", nullptr, 
-        ImGuiWindowFlags_NoMove 
-            | ImGuiWindowFlags_NoResize 
-            | ImGuiWindowFlags_NoCollapse
-            | ImGuiWindowFlags_NoTitleBar)) {
-
+    if (ImGui::Begin("MenuBar",
+                     nullptr,
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
+                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
         content();
 
         ImGui::End();
@@ -118,38 +151,39 @@ void LP::Window::destroy() {
     glfwTerminate();
 }
 
-std::string LP::Window::render_save_fd(const char* default_path) {
-    // filter patterns
-    const char* filter_pattern[2] = { "*.csv", "*.*" };
-    
-    const char* path = tinyfd_saveFileDialog(
-        "Save data", 
-        default_path, 
-        2, 
-        filter_pattern, 
-        "CSV Files (*.csv)"
-    );
+std::string LP::Window::render_save_fd(const char *default_name) {
+    NFD_Init();
 
-    if (path) {
-        return path;
+    std::string path_str             = "";
+
+    nfdu8char_t      *out_path       = nullptr;
+    nfdu8filteritem_t filter_item[1] = {
+        {"CSV File", "csv"}
+    };
+
+    nfdresult_t res = NFD_SaveDialogU8(&out_path, filter_item, 1, ".", default_name);
+
+    if (res == NFD_OKAY) {
+        path_str = out_path;
+        NFD_FreePath(out_path);
     }
 
-    return std::string();
+    NFD_Quit();
+
+    return path_str;
 }
 
-ImVec2 LP::Window::getWindowSize() {
-    return ImVec2(m_width, m_height);
-}
+ImVec2 LP::Window::getWindowSize() { return ImVec2(m_width, m_height); }
 
 void LP::Window::loadDefaultFont() {
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;
 
-    io->Fonts->AddFontFromMemoryTTF(roboto_ttf, roboto_ttf_len, 18.0f, &config); 
+    io->Fonts->AddFontFromMemoryTTF(roboto_ttf, roboto_ttf_len, 18.0f, &config);
 }
 
 void LP::Window::loadIconFont() {
-    static const ImWchar icon_ranges[] = { 0xE132, 0xE158, 0 };
+    static const ImWchar icon_ranges[] = {0xE132, 0xE158, 0};
 
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;
@@ -165,33 +199,47 @@ void LP::Window::setDarkStyle() {
     ImGui::StyleColorsDark();
 
     // --- Widgets spacing ---
-    imgui_style->ItemSpacing                        = ImVec2(12, 8); 
-    imgui_style->ItemInnerSpacing                   = ImVec2(2, 3);
-    
+    imgui_style->ItemSpacing      = ImVec2(12, 8);
+    imgui_style->ItemInnerSpacing = ImVec2(2, 3);
+
     // --- Widgets style ---
-    imgui_style->CellPadding                        = ImVec2(5, 5);
-    imgui_style->FramePadding                       = ImVec2(3, 3);
-    imgui_style->FrameRounding                      = 4.0f;
-    imgui_style->FrameBorderSize                    = 1.0f;
+    imgui_style->CellPadding     = ImVec2(5, 5);
+    imgui_style->FramePadding    = ImVec2(3, 3);
+    imgui_style->FrameRounding   = 4.0f;
+    imgui_style->FrameBorderSize = 1.0f;
 
-    // --- Colors --- 
-    imgui_style->Colors[ImGuiCol_WindowBg]          = ImVec4(0.09f, 0.1f, 0.15f, 1.0f);
-    imgui_style->Colors[ImGuiCol_FrameBg]           = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
-    imgui_style->Colors[ImGuiCol_FrameBgHovered]    = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
-    imgui_style->Colors[ImGuiCol_FrameBgActive]     = ImVec4(0.17f, 0.2f, 0.42f, 1.0f);
-    imgui_style->Colors[ImGuiCol_HeaderHovered]     = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
-    imgui_style->Colors[ImGuiCol_HeaderActive]      = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    // --- Colors ---
+    imgui_style->Colors[ImGuiCol_WindowBg]       = ImVec4(0.09f, 0.1f, 0.15f, 1.0f);
+    imgui_style->Colors[ImGuiCol_FrameBg]        = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    imgui_style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    imgui_style->Colors[ImGuiCol_FrameBgActive]  = ImVec4(0.17f, 0.2f, 0.42f, 1.0f);
+    imgui_style->Colors[ImGuiCol_HeaderHovered]  = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    imgui_style->Colors[ImGuiCol_HeaderActive]   = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
 
-    imgui_style->Colors[ImGuiCol_Button]            = ImVec4(0.05f, 0.4f, 0.9f, 1.0f);
-    imgui_style->Colors[ImGuiCol_ButtonHovered]     = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
-    imgui_style->Colors[ImGuiCol_ButtonActive]      = ImVec4(0.0f, 0.5f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_Button]         = ImVec4(0.05f, 0.4f, 0.9f, 1.0f);
+    imgui_style->Colors[ImGuiCol_ButtonHovered]  = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_ButtonActive]   = ImVec4(0.0f, 0.5f, 0.2f, 1.0f);
 
-    imgui_style->Colors[ImGuiCol_CheckMark]         = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_CheckMark]      = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
 
     // --- Implot style ---
-    implot_style->LineWeight                        = 2.0f;
-    implot_style->UseLocalTime                      = true;
+    implot_style->LineWeight                      = 2.0f;
+    implot_style->UseLocalTime                    = true;
 
-    implot_style->Colors[ImPlotCol_AxisBgHovered]   = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
-    implot_style->Colors[ImPlotCol_AxisBgActive]    = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    implot_style->Colors[ImPlotCol_AxisBgHovered] = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+    implot_style->Colors[ImPlotCol_AxisBgActive]  = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
+}
+
+void LP::Window::load_icon() {
+    int            icon_width, icon_height, icon_channels;
+    unsigned char *pixels = stbi_load_from_memory(
+        lpicon_png, lpicon_png_len, &icon_width, &icon_height, &icon_channels, 4);
+    if (pixels) {
+        GLFWimage images[1];
+        images[0].width  = icon_width;
+        images[0].height = icon_height;
+        images[0].pixels = pixels;
+        glfwSetWindowIcon(window, 1, images);
+        stbi_image_free(pixels);
+    }
 }

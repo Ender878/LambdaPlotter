@@ -13,30 +13,36 @@ endif()
 option(LP_BUILD_TESTS "Build the tests for this project" ON)
 
 # --- Gather source files ---
-file(GLOB LAMBDAPLOTTER "./src/LP/*.*")
-file(GLOB IMPLOT "./src/implot/*.*")
-file(GLOB BINDINGS "./src/bindings/*.*")
-file(GLOB FONTS "./src/fonts/*.c")
-file(GLOB TINYFD "./src/tinyfd/*.c")
+file(GLOB_RECURSE LAMBDAPLOTTER CONFIGURE_DEPENDS "./src/LP/*.*")
+file(GLOB_RECURSE IMPLOT CONFIGURE_DEPENDS "./src/implot/*.*")
+file(GLOB_RECURSE BINDINGS CONFIGURE_DEPENDS "./src/bindings/*.*")
+file(GLOB_RECURSE FONTS CONFIGURE_DEPENDS "./src/fonts/*.cpp")
 
 # --- Find Packages ---
 find_package(imgui REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glad  REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(nfd
+    GIT_REPOSITORY "https://github.com/btzy/nativefiledialog-extended.git"
+    GIT_TAG "origin/master"   # it's much better to use a specific Git revision or Git tag for reproducibility
+    SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/include/nfd"
+)
+FetchContent_MakeAvailable(nfd)
+
 add_library(lplib STATIC
     ${LAMBDAPLOTTER}
     ${IMPLOT}
     ${BINDINGS}
     ${FONTS}
-    ${TINYFD}
 )
 
 target_include_directories(lplib PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(lplib PUBLIC imgui::imgui glfw glad::glad)
+target_link_libraries(lplib PUBLIC imgui::imgui glfw glad::glad nfd)
 
 add_executable(lambda_plotter
     src/main.cpp 
@@ -59,6 +65,18 @@ target_compile_options(lplib PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>
     $<$<CXX_COMPILER_ID:MSVC>:/utf-8>
 )
+
+# --- App icons ---
+if(WIN32)
+    target_sources(lambda_plotter PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/assets/icon.rc)
+elseif(APPLE)
+    # Configure the application bundle properties.
+    set_target_properties(lambda_plotter PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_ICON_FILE assets/icon.icns
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/assets/Info.plist"
+    )
+endif()
 
 # --- Testing ---
 if(LP_BUILD_TESTS)

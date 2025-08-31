@@ -58,13 +58,15 @@ namespace LP {
              * @param default_path default save path
              * @return select save path
              */
-            static std::string render_save_fd(const char* default_path);
+            static std::string render_save_fd(const char* default_name);
 
             /**
              * @brief GLFW window close calls
              * 
              */
             static void destroy();
+
+            static void load_icon();
 
             static ImVec2 getWindowSize();
     };

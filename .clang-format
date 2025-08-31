@@ -1,0 +1,14 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 4
+BinPackArguments: false
+ColumnLimit: 100
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: AcrossEmptyLines
+AlignConsecutiveDeclarations: Consecutive
+---
+Language: Cpp
+---
+Language: ObjC
