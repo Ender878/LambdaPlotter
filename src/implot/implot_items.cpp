@@ -2426,10 +2426,10 @@ IMPLOT_INLINE void RenderPieSlice(ImDrawList &draw_list, const ImPlotPoint &cent
         const double offset      = 0.08; // Offset of the detached slice
         const double width_scale = 0.95; // Scale factor for the width of the detached slice
 
-        double a_mid             = (a0 + a1) / 2;
-        double new_a0            = a_mid - (a1 - a0) * width_scale / 2;
-        double new_a1            = a_mid + (a1 - a0) * width_scale / 2;
-        double new_da            = (new_a1 - new_a0) / (n - 1);
+        double a_mid  = (a0 + a1) / 2;
+        double new_a0 = a_mid - (a1 - a0) * width_scale / 2;
+        double new_a1 = a_mid + (a1 - a0) * width_scale / 2;
+        double new_da = (new_a1 - new_a0) / (n - 1);
 
         ImPlotPoint offsetCenter(center.x + offset * cos(a_mid), center.y + offset * sin(a_mid));
 
@@ -2487,16 +2487,16 @@ template <typename T> double PieChartSum(const T *values, int count, bool ignore
 template <typename T>
 void PlotPieChartEx(const char *const label_ids[], const T *values, int count, ImPlotPoint center,
                     double radius, double angle0, ImPlotPieChartFlags flags) {
-    ImDrawList &draw_list      = *GetPlotDrawList();
+    ImDrawList &draw_list = *GetPlotDrawList();
 
     const bool   ignore_hidden = ImHasFlag(flags, ImPlotPieChartFlags_IgnoreHidden);
     const double sum           = PieChartSum(values, count, ignore_hidden);
     const bool   normalize     = ImHasFlag(flags, ImPlotPieChartFlags_Normalize) || sum > 1.0;
 
-    double      a0             = angle0 * 2 * IM_PI / 360.0;
-    double      a1             = angle0 * 2 * IM_PI / 360.0;
-    ImPlotPoint Pmin           = ImPlotPoint(center.x - radius, center.y - radius);
-    ImPlotPoint Pmax           = ImPlotPoint(center.x + radius, center.y + radius);
+    double      a0   = angle0 * 2 * IM_PI / 360.0;
+    double      a1   = angle0 * 2 * IM_PI / 360.0;
+    ImPlotPoint Pmin = ImPlotPoint(center.x - radius, center.y - radius);
+    ImPlotPoint Pmax = ImPlotPoint(center.x + radius, center.y + radius);
     for (int i = 0; i < count; ++i) {
         ImPlotItem  *item    = GetItem(label_ids[i]);
         const double percent = normalize ? (double)values[i] / sum : (double)values[i];
@@ -2553,7 +2553,7 @@ void PlotPieChart(const char *const label_ids[], const T *values, int count, dou
                   ImPlotPieChartFlags flags) {
     IM_ASSERT_USER_ERROR(GImPlot->CurrentPlot != nullptr,
                          "PlotPieChart() needs to be called between BeginPlot() and EndPlot()!");
-    ImDrawList &draw_list      = *GetPlotDrawList();
+    ImDrawList &draw_list = *GetPlotDrawList();
 
     const bool   ignore_hidden = ImHasFlag(flags, ImPlotPieChartFlags_IgnoreHidden);
     const double sum           = PieChartSum(values, count, ignore_hidden);
@@ -2918,7 +2918,7 @@ double PlotHistogram2D(const char *label_id, const T *xs, const T *ys, int count
     else
         height = range.Y.Size() / y_bins;
 
-    const int bins               = x_bins * y_bins;
+    const int bins = x_bins * y_bins;
 
     ImPlotContext    &gp         = *GImPlot;
     ImVector<double> &bin_counts = gp.TempDouble1;
@@ -2990,9 +2990,9 @@ void PlotDigitalEx(const char *label_id, Getter getter, ImPlotDigitalFlags flags
         ImDrawList               &draw_list = *GetPlotDrawList();
         const ImPlotNextItemData &s         = GetItemData();
         if (getter.Count > 1 && s.RenderFill) {
-            ImPlotPlot &plot      = *gp.CurrentPlot;
-            ImPlotAxis &x_axis    = plot.Axes[plot.CurrentX];
-            ImPlotAxis &y_axis    = plot.Axes[plot.CurrentY];
+            ImPlotPlot &plot   = *gp.CurrentPlot;
+            ImPlotAxis &x_axis = plot.Axes[plot.CurrentX];
+            ImPlotAxis &y_axis = plot.Axes[plot.CurrentY];
 
             int         pixYMax   = 0;
             ImPlotPoint itemData1 = getter(0);

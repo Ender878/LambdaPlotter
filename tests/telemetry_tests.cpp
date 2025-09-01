@@ -35,7 +35,7 @@ TEST_F(TelemetryTest, ParseFrame_Unnamed) {
     std::vector<double> expected_ch2 = {12, 5, 3};
     std::vector<double> expected_ch3 = {3, 2, 0};
 
-    std::string frame_stream         = "15 12 3\n14 5 2\n4 3 0\n";
+    std::string frame_stream = "15 12 3\n14 5 2\n4 3 0\n";
 
     tel.parse_frame(frame_stream);
 
@@ -53,7 +53,7 @@ TEST_F(TelemetryTest, ParseFrame_Named) {
 
     std::string frame_stream = "x = 15 y = 12 z = 3\nx = 14 y = 5 z = 2\nx = 4 y = 3 z = 0\n";
 
-    tel.frame_format.named   = true;
+    tel.frame_format.named = true;
     std::strcpy(tel.frame_format.name_sep, " = ");
 
     tel.parse_frame(frame_stream);

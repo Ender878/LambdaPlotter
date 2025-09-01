@@ -154,7 +154,7 @@ void LP::Window::destroy() {
 std::string LP::Window::render_save_fd(const char *default_name) {
     NFD_Init();
 
-    std::string path_str             = "";
+    std::string path_str = "";
 
     nfdu8char_t      *out_path       = nullptr;
     nfdu8filteritem_t filter_item[1] = {
@@ -216,15 +216,15 @@ void LP::Window::setDarkStyle() {
     imgui_style->Colors[ImGuiCol_HeaderHovered]  = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
     imgui_style->Colors[ImGuiCol_HeaderActive]   = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
 
-    imgui_style->Colors[ImGuiCol_Button]         = ImVec4(0.05f, 0.4f, 0.9f, 1.0f);
-    imgui_style->Colors[ImGuiCol_ButtonHovered]  = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
-    imgui_style->Colors[ImGuiCol_ButtonActive]   = ImVec4(0.0f, 0.5f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_Button]        = ImVec4(0.05f, 0.4f, 0.9f, 1.0f);
+    imgui_style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_ButtonActive]  = ImVec4(0.0f, 0.5f, 0.2f, 1.0f);
 
-    imgui_style->Colors[ImGuiCol_CheckMark]      = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
+    imgui_style->Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 0.6f, 0.2f, 1.0f);
 
     // --- Implot style ---
-    implot_style->LineWeight                      = 2.0f;
-    implot_style->UseLocalTime                    = true;
+    implot_style->LineWeight   = 2.0f;
+    implot_style->UseLocalTime = true;
 
     implot_style->Colors[ImPlotCol_AxisBgHovered] = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
     implot_style->Colors[ImPlotCol_AxisBgActive]  = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);

@@ -593,7 +593,7 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow *window, int keycode, int scancode, i
 
     ImGui_ImplGlfw_UpdateKeyModifiers(window);
 
-    keycode            = ImGui_ImplGlfw_TranslateUntranslatedKey(keycode, scancode);
+    keycode = ImGui_ImplGlfw_TranslateUntranslatedKey(keycode, scancode);
 
     ImGuiIO &io        = ImGui::GetIO();
     ImGuiKey imgui_key = ImGui_ImplGlfw_KeyToImGuiKey(keycode, scancode);
@@ -796,8 +796,8 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow *window, bool install_callbacks,
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos; // We can honor io.WantSetMousePos
                                                          // requests (optional, rarely used)
 
-    bd->Window                   = window;
-    bd->Time                     = 0.0;
+    bd->Window = window;
+    bd->Time   = 0.0;
 
     ImGuiPlatformIO &platform_io = ImGui::GetPlatformIO();
 #if GLFW_VERSION_COMBINED < 3300

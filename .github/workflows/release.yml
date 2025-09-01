@@ -19,7 +19,7 @@ jobs:
     #         sudo apt-get update
     #         sudo apt-get install clang-format-20
     #     - name: Format code
-    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp'  -or -iname '*.h' | xargs clang-format -i -style=file
+    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp' -or -iname '*.h' | xargs clang-format -i -style=file
 
     #     - name: Check diff
     #       run: git diff --exit-code

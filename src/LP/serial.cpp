@@ -17,10 +17,10 @@
 std::string              LP::Serial::last_open_port = "";
 std::vector<std::string> LP::Serial::serial_ports   = read_system_ports();
 
-uint16_t LP::Serial::parity                         = 0;      // parity bit disabled
-uint16_t LP::Serial::stop_bits                      = 1;      // 1 stop bit
-uint16_t LP::Serial::data_bits                      = LP_CS8; // 8 data bits
-uint16_t LP::Serial::flow_ctrl                      = 0;      // hardware flow control disabled
+uint16_t LP::Serial::parity    = 0;      // parity bit disabled
+uint16_t LP::Serial::stop_bits = 1;      // 1 stop bit
+uint16_t LP::Serial::data_bits = LP_CS8; // 8 data bits
+uint16_t LP::Serial::flow_ctrl = 0;      // hardware flow control disabled
 
 #ifndef _WIN32
 LP::Serial::Serial(const char *port, size_t baud) {
@@ -111,7 +111,7 @@ LP::Serial::Serial(const char *port, size_t baud) {
     tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR |
                      ICRNL); // Disable any special handling of received bytes
 
-    tty.c_cc[VTIME] = 0; // timeout of 1 decisecond
+    tty.c_cc[VTIME] = 0;
     tty.c_cc[VMIN]  = 1; // wait for at least one byte
 
     // set baud rate

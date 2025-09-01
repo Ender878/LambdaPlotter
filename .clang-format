@@ -6,7 +6,7 @@ ColumnLimit: 100
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 AlignArrayOfStructures: Left
-AlignConsecutiveAssignments: AcrossEmptyLines
+AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: Consecutive
 ---
 Language: Cpp

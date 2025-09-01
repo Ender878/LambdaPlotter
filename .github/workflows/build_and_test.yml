@@ -6,10 +6,15 @@ on:
     tags-ignore:
       - 'v*.*.*'
     paths-ignore:
-      - .github/release.yml
+      - .github/workflows/release.yml
+      - .github/imgs/**
       - README.md
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - .github/workflows/release.yml
+      - .github/imgs/**
+      - README.md
 
 jobs:
     # clang_format:
@@ -19,14 +24,9 @@ jobs:
     #     steps:
     #     - name: Checkout repository
     #       uses: actions/checkout@v4
-        
-    #     - name: Get clang-format
-    #       run: |
-    #         sudo apt-get update
-    #         sudo apt-get install clang-format-20
 
     #     - name: Format code
-    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp'  -or -iname '*.h' | xargs clang-format -i -style=file
+    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp' -or -iname '*.h' | xargs clang-format -i -style=file
 
     #     - name: Check diff
     #       run: git diff --exit-code

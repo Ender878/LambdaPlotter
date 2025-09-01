@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20.0)
-project(lambda_plotter VERSION 0.1.0 LANGUAGES C CXX)
+project(lambda_plotter VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,7 +26,7 @@ find_package(glad  REQUIRED)
 include(FetchContent)
 FetchContent_Declare(nfd
     GIT_REPOSITORY "https://github.com/btzy/nativefiledialog-extended.git"
-    GIT_TAG "origin/master"   # it's much better to use a specific Git revision or Git tag for reproducibility
+    GIT_TAG "origin/master"
     SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/include/nfd"
 )
 FetchContent_MakeAvailable(nfd)

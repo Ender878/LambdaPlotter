@@ -217,15 +217,15 @@ ImPlotContext *GImPlot = nullptr;
 ImPlotInputMap::ImPlotInputMap() { ImPlot::MapInputDefault(this); }
 
 ImPlotStyle::ImPlotStyle() {
-    LineWeight         = 1;
-    Marker             = ImPlotMarker_None;
-    MarkerSize         = 4;
-    MarkerWeight       = 1;
-    FillAlpha          = 1;
-    ErrorBarSize       = 5;
-    ErrorBarWeight     = 1.5f;
-    DigitalBitHeight   = 8;
-    DigitalBitGap      = 4;
+    LineWeight       = 1;
+    Marker           = ImPlotMarker_None;
+    MarkerSize       = 4;
+    MarkerWeight     = 1;
+    FillAlpha        = 1;
+    ErrorBarSize     = 5;
+    ErrorBarWeight   = 1.5f;
+    DigitalBitHeight = 8;
+    DigitalBitGap    = 4;
 
     PlotBorderSize     = 1;
     MinorAlpha         = 0.25f;
@@ -248,7 +248,7 @@ ImPlotStyle::ImPlotStyle() {
 
     ImPlot::StyleColorsAuto(this);
 
-    Colormap       = ImPlotColormap_Deep;
+    Colormap = ImPlotColormap_Deep;
 
     UseLocalTime   = false;
     Use24HourClock = false;
@@ -868,7 +868,7 @@ bool ShowLegendEntries(ImPlotItemGroup &items, const ImRect &legend_bb, bool hov
     float sum_label_width  = 0;
     bool  any_item_hovered = false;
 
-    const int num_items    = items.GetLegendCount();
+    const int num_items = items.GetLegendCount();
     if (num_items < 1) return hovered;
     // build render order
     ImPlotContext &gp      = *GImPlot;
@@ -1205,19 +1205,19 @@ ImPlotTime MakeTime(int year, int month, int day, int hour, int min, int sec, in
     int yr = year - 1900;
     if (yr < 0) yr = 0;
 
-    sec          = sec + us / 1000000;
-    us           = us % 1000000;
+    sec = sec + us / 1000000;
+    us  = us % 1000000;
 
-    Tm.tm_sec    = sec;
-    Tm.tm_min    = min;
-    Tm.tm_hour   = hour;
-    Tm.tm_mday   = day;
-    Tm.tm_mon    = month;
-    Tm.tm_year   = yr;
+    Tm.tm_sec  = sec;
+    Tm.tm_min  = min;
+    Tm.tm_hour = hour;
+    Tm.tm_mday = day;
+    Tm.tm_mon  = month;
+    Tm.tm_year = yr;
 
     ImPlotTime t = MkTime(&Tm);
 
-    t.Us         = us;
+    t.Us = us;
     return t;
 }
 
@@ -1857,7 +1857,7 @@ void ShowPlotContextMenu(ImPlotPlot &plot) {
     const bool     owns_legend = gp.CurrentItems == &plot.Items;
     const bool     equal       = ImHasFlag(plot.Flags, ImPlotFlags_Equal);
 
-    char buf[16]               = {};
+    char buf[16] = {};
 
     for (int i = 0; i < IMPLOT_NUM_X_AXES; i++) {
         ImPlotAxis &x_axis = plot.XAxis(i);
@@ -1975,14 +1975,14 @@ void UpdateAxisColors(ImPlotAxis &axis) {
 void PadAndDatumAxesX(ImPlotPlot &plot, float &pad_T, float &pad_B, ImPlotAlignmentData *align) {
     ImPlotContext &gp = *GImPlot;
 
-    const float T     = ImGui::GetTextLineHeight();
-    const float P     = gp.Style.LabelPadding.y;
-    const float K     = gp.Style.MinorTickLen.x;
+    const float T = ImGui::GetTextLineHeight();
+    const float P = gp.Style.LabelPadding.y;
+    const float K = gp.Style.MinorTickLen.x;
 
-    int   count_T     = 0;
-    int   count_B     = 0;
-    float last_T      = plot.AxesRect.Min.y;
-    float last_B      = plot.AxesRect.Max.y;
+    int   count_T = 0;
+    int   count_B = 0;
+    float last_T  = plot.AxesRect.Min.y;
+    float last_B  = plot.AxesRect.Max.y;
 
     for (int i = IMPLOT_NUM_X_AXES; i-- > 0;) { // FYI: can iterate forward
         ImPlotAxis &axis = plot.XAxis(i);
@@ -2044,14 +2044,14 @@ void PadAndDatumAxesY(ImPlotPlot &plot, float &pad_L, float &pad_R, ImPlotAlignm
 
     ImPlotContext &gp = *GImPlot;
 
-    const float T     = ImGui::GetTextLineHeight();
-    const float P     = gp.Style.LabelPadding.x;
-    const float K     = gp.Style.MinorTickLen.y;
+    const float T = ImGui::GetTextLineHeight();
+    const float P = gp.Style.LabelPadding.x;
+    const float K = gp.Style.MinorTickLen.y;
 
-    int   count_L     = 0;
-    int   count_R     = 0;
-    float last_L      = plot.AxesRect.Min.x;
-    float last_R      = plot.AxesRect.Max.x;
+    int   count_L = 0;
+    int   count_R = 0;
+    float last_L  = plot.AxesRect.Min.x;
+    float last_R  = plot.AxesRect.Max.x;
 
     for (int i = IMPLOT_NUM_Y_AXES; i-- > 0;) { // FYI: can iterate forward
         ImPlotAxis &axis = plot.YAxis(i);
@@ -2165,7 +2165,7 @@ static const float MOUSE_CURSOR_DRAG_THRESHOLD = 5.0f;
 static const float BOX_SELECT_DRAG_THRESHOLD   = 4.0f;
 
 bool UpdateInput(ImPlotPlot &plot) {
-    bool changed      = false;
+    bool changed = false;
 
     ImPlotContext &gp = *GImPlot;
     ImGuiIO       &IO = ImGui::GetIO();
@@ -2199,7 +2199,7 @@ bool UpdateInput(ImPlotPlot &plot) {
 
     const bool can_pan = IO.MouseDown[gp.InputMap.Pan] && ImHasFlag(IO.KeyMods, gp.InputMap.PanMod);
 
-    plot.Held          = plot.Held && can_pan;
+    plot.Held = plot.Held && can_pan;
 
     bool x_click[IMPLOT_NUM_X_AXES] = {false};
     bool x_held[IMPLOT_NUM_X_AXES]  = {false};
@@ -2249,12 +2249,12 @@ bool UpdateInput(ImPlotPlot &plot) {
     const bool any_x_hov = plot.Hovered || AnyAxesHovered(&plot.Axes[ImAxis_X1], IMPLOT_NUM_X_AXES);
     const bool any_x_held = plot.Held || AnyAxesHeld(&plot.Axes[ImAxis_X1], IMPLOT_NUM_X_AXES);
     const bool any_y_hov = plot.Hovered || AnyAxesHovered(&plot.Axes[ImAxis_Y1], IMPLOT_NUM_Y_AXES);
-    const bool any_y_held    = plot.Held || AnyAxesHeld(&plot.Axes[ImAxis_Y1], IMPLOT_NUM_Y_AXES);
-    const bool any_hov       = any_x_hov || any_y_hov;
-    const bool any_held      = any_x_held || any_y_held;
+    const bool any_y_held = plot.Held || AnyAxesHeld(&plot.Axes[ImAxis_Y1], IMPLOT_NUM_Y_AXES);
+    const bool any_hov    = any_x_hov || any_y_hov;
+    const bool any_held   = any_x_held || any_y_held;
 
-    const ImVec2 select_drag = ImGui::GetMouseDragDelta(gp.InputMap.Select);
-    const ImVec2 pan_drag    = ImGui::GetMouseDragDelta(gp.InputMap.Pan);
+    const ImVec2 select_drag    = ImGui::GetMouseDragDelta(gp.InputMap.Select);
+    const ImVec2 pan_drag       = ImGui::GetMouseDragDelta(gp.InputMap.Pan);
     const float  select_drag_sq = ImLengthSqr(select_drag);
     const float  pan_drag_sq    = ImLengthSqr(pan_drag);
     const bool   selecting      = plot.Selecting && select_drag_sq > MOUSE_CURSOR_DRAG_THRESHOLD;
@@ -2772,11 +2772,11 @@ bool BeginPlot(const char *title_id, const ImVec2 &size, ImPlotFlags flags) {
     const bool    just_created = gp.Plots.GetByKey(ID) == nullptr;
     gp.CurrentPlot             = gp.Plots.GetOrAddByKey(ID);
 
-    ImPlotPlot &plot           = *gp.CurrentPlot;
-    plot.ID                    = ID;
-    plot.Items.ID              = ID - 1;
-    plot.JustCreated           = just_created;
-    plot.SetupLocked           = false;
+    ImPlotPlot &plot = *gp.CurrentPlot;
+    plot.ID          = ID;
+    plot.Items.ID    = ID - 1;
+    plot.JustCreated = just_created;
+    plot.SetupLocked = false;
 
     // check flags
     if (plot.JustCreated)
@@ -2852,7 +2852,7 @@ void SetupFinish() {
     ImDrawList       &DrawList = *G.CurrentWindow->DrawList;
     const ImGuiStyle &Style    = G.Style;
 
-    ImPlotPlot &plot           = *gp.CurrentPlot;
+    ImPlotPlot &plot = *gp.CurrentPlot;
 
     // lock setup
     plot.SetupLocked = true;
@@ -3363,8 +3363,8 @@ void EndPlot() {
     // render mouse pos
     if (!ImHasFlag(plot.Flags, ImPlotFlags_NoMouseText) &&
         (plot.Hovered || ImHasFlag(plot.MouseTextFlags, ImPlotMouseTextFlags_ShowAlways))) {
-        const bool no_aux        = ImHasFlag(plot.MouseTextFlags, ImPlotMouseTextFlags_NoAuxAxes);
-        const bool no_fmt        = ImHasFlag(plot.MouseTextFlags, ImPlotMouseTextFlags_NoFormat);
+        const bool no_aux = ImHasFlag(plot.MouseTextFlags, ImPlotMouseTextFlags_NoAuxAxes);
+        const bool no_fmt = ImHasFlag(plot.MouseTextFlags, ImPlotMouseTextFlags_NoFormat);
 
         ImGuiTextBuffer &builder = gp.MousePosStringBuilder;
         builder.Buf.shrink(0);
@@ -4454,8 +4454,8 @@ bool DragPoint(int n_id, double *x, double *y, const ImVec4 &col, float radius,
     const ImVec4 color          = IsColorAuto(col) ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : col;
     const ImU32  col32          = ImGui::ColorConvertFloat4ToU32(color);
 
-    ImVec2        pos           = PlotToPixels(*x, *y, IMPLOT_AUTO, IMPLOT_AUTO);
-    const ImGuiID id            = ImGui::GetCurrentWindow()->GetID(n_id);
+    ImVec2        pos = PlotToPixels(*x, *y, IMPLOT_AUTO, IMPLOT_AUTO);
+    const ImGuiID id  = ImGui::GetCurrentWindow()->GetID(n_id);
     ImRect        rect(pos.x - grab_half_size,
                 pos.y - grab_half_size,
                 pos.x + grab_half_size,
@@ -4521,9 +4521,9 @@ bool DragLineX(int n_id, double *value, const ImVec4 &col, float thickness,
 
     if ((hovered || held) && show_curs) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
 
-    float  len    = gp.Style.MajorTickLen.x;
-    ImVec4 color  = IsColorAuto(col) ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : col;
-    ImU32  col32  = ImGui::ColorConvertFloat4ToU32(color);
+    float  len   = gp.Style.MajorTickLen.x;
+    ImVec4 color = IsColorAuto(col) ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : col;
+    ImU32  col32 = ImGui::ColorConvertFloat4ToU32(color);
 
     bool modified = false;
     if (held && ImGui::IsMouseDragging(0)) {
@@ -4563,7 +4563,7 @@ bool DragLineY(int n_id, double *value, const ImVec4 &col, float thickness,
     float       xr             = gp.CurrentPlot->PlotRect.Max.x;
     float       y              = IM_ROUND(PlotToPixels(0, *value, IMPLOT_AUTO, IMPLOT_AUTO).y);
 
-    const ImGuiID id           = ImGui::GetCurrentWindow()->GetID(n_id);
+    const ImGuiID id = ImGui::GetCurrentWindow()->GetID(n_id);
     ImRect        rect(xl, y - grab_half_size, xr, y + grab_half_size);
     bool          hovered = false, held = false;
 
@@ -4577,9 +4577,9 @@ bool DragLineY(int n_id, double *value, const ImVec4 &col, float thickness,
 
     if ((hovered || held) && show_curs) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
 
-    float  len    = gp.Style.MajorTickLen.y;
-    ImVec4 color  = IsColorAuto(col) ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : col;
-    ImU32  col32  = ImGui::ColorConvertFloat4ToU32(color);
+    float  len   = gp.Style.MajorTickLen.y;
+    ImVec4 color = IsColorAuto(col) ? ImGui::GetStyleColorVec4(ImGuiCol_Text) : col;
+    ImU32  col32 = ImGui::ColorConvertFloat4ToU32(color);
 
     bool modified = false;
     if (held && ImGui::IsMouseDragging(0)) {
@@ -4646,7 +4646,7 @@ bool DragRect(int n_id, double *x_min, double *y_min, double *x_max, double *y_m
     ImU32         col32_a = ImGui::ColorConvertFloat4ToU32(color);
     const ImGuiID id      = ImGui::GetCurrentWindow()->GetID(n_id);
 
-    bool   modified       = false;
+    bool   modified = false;
     bool   clicked = false, hovered = false, held = false;
     ImRect b_rect(pc.x - DRAG_GRAB_HALF_SIZE,
                   pc.y - DRAG_GRAB_HALF_SIZE,
@@ -5265,9 +5265,9 @@ void ColormapScale(const char *label, double scale_min, double scale_max, const 
                        true,
                        G.Style.FrameRounding);
 
-    const bool opposite  = ImHasFlag(flags, ImPlotColormapScaleFlags_Opposite);
-    const bool inverted  = ImHasFlag(flags, ImPlotColormapScaleFlags_Invert);
-    const bool reversed  = scale_min > scale_max;
+    const bool opposite = ImHasFlag(flags, ImPlotColormapScaleFlags_Opposite);
+    const bool inverted = ImHasFlag(flags, ImPlotColormapScaleFlags_Invert);
+    const bool reversed = scale_min > scale_max;
 
     float  bb_grad_shift = opposite ? pad : 0;
     ImRect bb_grad(bb_frame.Min + gp.Style.PlotPadding + ImVec2(bb_grad_shift, 0),
@@ -5275,7 +5275,7 @@ void ColormapScale(const char *label, double scale_min, double scale_max, const 
                                          frame_size.y - gp.Style.PlotPadding.y));
 
     ImGui::PushClipRect(bb_frame.Min, bb_frame.Max, true);
-    const ImU32 col_text     = ImGui::GetColorU32(ImGuiCol_Text);
+    const ImU32 col_text = ImGui::GetColorU32(ImGuiCol_Text);
 
     const bool  invert_scale = inverted ? (reversed ? false : true) : (reversed ? true : false);
     const float y_min        = invert_scale ? bb_grad.Max.y : bb_grad.Min.y;
@@ -5755,8 +5755,8 @@ void ShowStyleEditor(ImPlotStyle *ref) {
             ImGui::Separator();
             for (int i = 0; i < gp.ColormapData.Count; ++i) {
                 ImGui::PushID(i);
-                int  size        = gp.ColormapData.GetKeyCount(i);
-                bool selected    = i == gp.Style.Colormap;
+                int  size     = gp.ColormapData.GetKeyCount(i);
+                bool selected = i == gp.Style.Colormap;
 
                 const char *name = GetColormapName(i);
                 if (!selected) ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.25f);
@@ -5897,9 +5897,9 @@ void ShowMetricsWindow(bool *p_popen) {
     static bool show_subplot_grid_rects  = false;
     static bool show_legend_rects        = false;
 
-    ImDrawList &fg                       = *ImGui::GetForegroundDrawList();
+    ImDrawList &fg = *ImGui::GetForegroundDrawList();
 
-    ImPlotContext &gp                    = *GImPlot;
+    ImPlotContext &gp = *GImPlot;
     // ImGuiContext& g = *GImGui;
     ImGuiIO &io = ImGui::GetIO();
     ImGui::Begin("ImPlot Metrics", p_popen);
@@ -6136,8 +6136,8 @@ bool ShowDatePicker(const char *id, int *level, ImPlotTime *t, const ImPlotTime 
     const float ht = ImGui::GetFrameHeight();
     ImVec2      cell_size(ht * 1.25f, ht);
     char        buff[32];
-    bool        clk  = false;
-    tm         &Tm   = GImPlot->Tm;
+    bool        clk = false;
+    tm         &Tm  = GImPlot->Tm;
 
     const int min_yr = 1970;
     const int max_yr = 2999;
@@ -6213,11 +6213,11 @@ bool ShowDatePicker(const char *id, int *level, ImPlotTime *t, const ImPlotTime 
                     mo  = 2;
                     day = 1;
                 }
-                const int now_yr  = (mo == 0 && this_mon == 0)
-                                        ? last_year
-                                        : ((mo == 2 && this_mon == 11) ? next_year : this_year);
-                const int now_mo  = mo == 0 ? last_mon : (mo == 1 ? this_mon : next_mon);
-                const int now_md  = day;
+                const int now_yr = (mo == 0 && this_mon == 0)
+                                       ? last_year
+                                       : ((mo == 2 && this_mon == 11) ? next_year : this_year);
+                const int now_mo = mo == 0 ? last_mon : (mo == 1 ? this_mon : next_mon);
+                const int now_md = day;
 
                 const bool off_mo = mo == 0 || mo == 2;
                 const bool t1_or_t2 =
@@ -6338,14 +6338,14 @@ bool ShowTimePicker(const char *id, ImPlotTime *t) {
 
     static const char *am_pm[] = {"am", "pm"};
 
-    bool hour24                = gp.Style.Use24HourClock;
+    bool hour24 = gp.Style.Use24HourClock;
 
     int hr  = hour24 ? Tm.tm_hour : ((Tm.tm_hour == 0 || Tm.tm_hour == 12) ? 12 : Tm.tm_hour % 12);
     int min = Tm.tm_min;
     int sec = Tm.tm_sec;
     int ap  = Tm.tm_hour < 12 ? 0 : 1;
 
-    bool changed   = false;
+    bool changed = false;
 
     ImVec2 spacing = ImGui::GetStyle().ItemSpacing;
     spacing.x      = 0;
@@ -6421,10 +6421,10 @@ bool ShowTimePicker(const char *id, ImPlotTime *t) {
 }
 
 void StyleColorsAuto(ImPlotStyle *dst) {
-    ImPlotStyle *style              = dst ? dst : &ImPlot::GetStyle();
-    ImVec4      *colors             = style->Colors;
+    ImPlotStyle *style  = dst ? dst : &ImPlot::GetStyle();
+    ImVec4      *colors = style->Colors;
 
-    style->MinorAlpha               = 0.25f;
+    style->MinorAlpha = 0.25f;
 
     colors[ImPlotCol_Line]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_Fill]          = IMPLOT_AUTO_COL;
@@ -6451,10 +6451,10 @@ void StyleColorsAuto(ImPlotStyle *dst) {
 }
 
 void StyleColorsClassic(ImPlotStyle *dst) {
-    ImPlotStyle *style              = dst ? dst : &ImPlot::GetStyle();
-    ImVec4      *colors             = style->Colors;
+    ImPlotStyle *style  = dst ? dst : &ImPlot::GetStyle();
+    ImVec4      *colors = style->Colors;
 
-    style->MinorAlpha               = 0.5f;
+    style->MinorAlpha = 0.5f;
 
     colors[ImPlotCol_Line]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_Fill]          = IMPLOT_AUTO_COL;
@@ -6480,10 +6480,10 @@ void StyleColorsClassic(ImPlotStyle *dst) {
 }
 
 void StyleColorsDark(ImPlotStyle *dst) {
-    ImPlotStyle *style              = dst ? dst : &ImPlot::GetStyle();
-    ImVec4      *colors             = style->Colors;
+    ImPlotStyle *style  = dst ? dst : &ImPlot::GetStyle();
+    ImVec4      *colors = style->Colors;
 
-    style->MinorAlpha               = 0.25f;
+    style->MinorAlpha = 0.25f;
 
     colors[ImPlotCol_Line]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_Fill]          = IMPLOT_AUTO_COL;
@@ -6509,10 +6509,10 @@ void StyleColorsDark(ImPlotStyle *dst) {
 }
 
 void StyleColorsLight(ImPlotStyle *dst) {
-    ImPlotStyle *style              = dst ? dst : &ImPlot::GetStyle();
-    ImVec4      *colors             = style->Colors;
+    ImPlotStyle *style  = dst ? dst : &ImPlot::GetStyle();
+    ImVec4      *colors = style->Colors;
 
-    style->MinorAlpha               = 1.0f;
+    style->MinorAlpha = 1.0f;
 
     colors[ImPlotCol_Line]          = IMPLOT_AUTO_COL;
     colors[ImPlotCol_Fill]          = IMPLOT_AUTO_COL;

@@ -62,7 +62,7 @@ std::string LP::Telemetry::parse_serial(std::vector<char> &buffer) {
 }
 
 void LP::Telemetry::parse_frame(const std::string &frame_stream) {
-    auto it_end             = std::sregex_iterator();
+    auto it_end = std::sregex_iterator();
 
     std::string frame_end   = Telemetry::format_special_chars(frame_format.frame_end);
     std::string channel_sep = Telemetry::format_special_chars(frame_format.channel_sep);
@@ -88,7 +88,7 @@ void LP::Telemetry::parse_frame(const std::string &frame_stream) {
     for (auto it_f = frames_it_begin; it_f != it_end; ++it_f) {
         std::string frame = it_f->str();
 
-        size_t ch_id      = 1;
+        size_t ch_id = 1;
 
         // iterate throught all the valid values found in the frame that matched the regex
         auto values_it_begin = std::sregex_iterator(frame.begin(), frame.end(), value_rgx);
@@ -128,11 +128,11 @@ void LP::Telemetry::parse_frame(const std::string &frame_stream) {
 std::string LP::Telemetry::format_special_chars(const char *s) {
     std::string result = s;
 
-    result             = std::regex_replace(result, std::regex(R"(\\n)"), "\n");
-    result             = std::regex_replace(result, std::regex(R"(\\r)"), "\r");
-    result             = std::regex_replace(result, std::regex(R"(\\t)"), "\t");
-    result             = std::regex_replace(result, std::regex(R"(\\f)"), "\f");
-    result             = std::regex_replace(result, std::regex(R"(\\v)"), "\v");
+    result = std::regex_replace(result, std::regex(R"(\\n)"), "\n");
+    result = std::regex_replace(result, std::regex(R"(\\r)"), "\r");
+    result = std::regex_replace(result, std::regex(R"(\\t)"), "\t");
+    result = std::regex_replace(result, std::regex(R"(\\f)"), "\f");
+    result = std::regex_replace(result, std::regex(R"(\\v)"), "\v");
 
     return result;
 }
@@ -243,7 +243,7 @@ std::string LP::Telemetry::format_datetime(double unix_timestamp) {
     // get time from system clock
     time_t time = static_cast<time_t>(unix_timestamp);
 
-    std::tm tm  = *std::localtime(&time);
+    std::tm tm = *std::localtime(&time);
 
     // format the string
     std::ostringstream oss;

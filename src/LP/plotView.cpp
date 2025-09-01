@@ -50,7 +50,7 @@ void LP::PlotView::render_plot(Telemetry &tel, app_state_t app_state, int pos_x,
                 double first_time = times->front();
                 double last_time  = times->back();
 
-                int time_window   = LP::time_windows[combobox_time_index].value;
+                int time_window = LP::time_windows[combobox_time_index].value;
 
                 if (plot_style.time_style == ELAPSED) {
                     time_window *= 1000;
@@ -391,10 +391,6 @@ void LP::PlotView::render_data_format(Telemetry &tel, app_state_t app_state) {
         if (same_str_channel_sep) {
             ImGui::PopStyleColor();
         }
-
-        ImGui::SameLine();
-
-        render_tooltip("placeholder");
 
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
