@@ -72,7 +72,7 @@ namespace LP {
            * @param width
            * @param height
            */
-            void render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height);
+            void render_plot(Telemetry& tel, app_state_t app_state, float pos_x, float pos_y, float width, float height);
 
             /**
              * @brief Render widgets used to interact and read received data 

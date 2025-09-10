@@ -120,13 +120,10 @@ void LP::Telemetry::parse_frame(const std::string& frame_stream)
                 const double val = std::stod(value, nullptr);
 
                 data[ch_id].values.push_back(val);
-                // data[ch_id].values_transformed.push_back(val * data[ch_id].scale +
-                // data[ch_id].offset);
             }
             catch ([[maybe_unused]] const std::invalid_argument& e)
             {
                 data[ch_id].values.push_back(NAN);
-                // data[ch_id].values_transformed.push_back(NAN);
             }
 
             ch_id++;
@@ -145,7 +142,6 @@ std::string LP::Telemetry::format_special_chars(const char* s)
 {
     std::string result = s;
 
-    result = std::regex_replace(result, std::regex(R"(\\)"), "\\");
     result = std::regex_replace(result, std::regex(R"(\\n)"), "\n");
     result = std::regex_replace(result, std::regex(R"(\\r)"), "\r");
     result = std::regex_replace(result, std::regex(R"(\\t)"), "\t");

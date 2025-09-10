@@ -244,7 +244,7 @@ void LP::Window::load_icon()
 {
     int            icon_width, icon_height, icon_channels;
     unsigned char* pixels =
-        stbi_load_from_memory(lpicon_png, lpicon_png_len, &icon_width, &icon_height, &icon_channels, 4);
+        stbi_load_from_memory(lp_icon_png, lp_icon_png_len, &icon_width, &icon_height, &icon_channels, 4);
     if (pixels)
     {
         GLFWimage images[1];

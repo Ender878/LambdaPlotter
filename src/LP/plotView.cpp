@@ -14,7 +14,8 @@
 
 #define TEXT_BUFFER_SIZE 256
 
-void LP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height)
+void LP::PlotView::render_plot(
+    Telemetry& tel, app_state_t app_state, const float pos_x, const float pos_y, const float width, const float height)
 {
     std::lock_guard<std::mutex> lock(tel.get_data_mtx());
 
@@ -45,8 +46,8 @@ void LP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x,
 
                 ImPlot::SetupLegend(ImPlotLocation_NorthWest, ImPlotLegendFlags_NoButtons);
 
-                double first_time = times->front();
-                double last_time  = times->back();
+                const double first_time = times->front();
+                const double last_time  = times->back();
 
                 int time_window = LP::time_windows[combobox_time_index].value;
 
@@ -62,25 +63,23 @@ void LP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x,
                     ImPlot::SetupAxisLimits(ImAxis_X1, window_start, last_time, ImGuiCond_Always);
 
                 // get plot window limits and set the time window (used when saving the plot)
-                ImPlotRect limits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
-                plot_style.limits = {limits.Min().x, limits.Max().x, limits.Min().y, limits.Max().y};
+                const ImPlotRect limits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+                plot_style.limits       = {limits.Min().x, limits.Max().x, limits.Min().y, limits.Max().y};
 
-                for (auto& stream : *data)
+                for (auto& [ch_id, channel] : *data)
                 {
-                    auto  data_id = stream.first;
-                    auto& channel = stream.second;
 
-                    if (!plot_attributes.contains(data_id))
+                    if (!plot_attributes.contains(ch_id))
                     {
-                        channel_style_init(data_id);
+                        channel_style_init(ch_id);
                     }
 
-                    if (plot_attributes[data_id].show)
+                    if (plot_attributes[ch_id].show)
                     {
-                        std::string label = std::format("{}##{}", channel.name, data_id);
+                        std::string label = std::format("{}##{}", channel.name, ch_id);
 
-                        ImPlot::PushStyleColor(ImPlotCol_Line, plot_attributes[data_id].color);
-                        ImPlot::PushStyleColor(ImPlotCol_Fill, plot_attributes[data_id].color);
+                        ImPlot::PushStyleColor(ImPlotCol_Line, plot_attributes[ch_id].color);
+                        ImPlot::PushStyleColor(ImPlotCol_Fill, plot_attributes[ch_id].color);
 
                         std::vector<double> values_transformed;
 
@@ -90,13 +89,13 @@ void LP::PlotView::render_plot(Telemetry& tel, app_state_t app_state, int pos_x,
                             values_transformed.push_back(channel.values[i] * channel.scale + channel.offset);
                         }
 
-                        plot_functions[plot_attributes[data_id].combobox_func_index].func(label.c_str(),
-                                                                                          times->data(),
-                                                                                          values_transformed.data(),
-                                                                                          times->size(),
-                                                                                          0,
-                                                                                          0,
-                                                                                          sizeof(double));
+                        plot_functions[plot_attributes[ch_id].combobox_func_index].func(label.c_str(),
+                                                                                        times->data(),
+                                                                                        values_transformed.data(),
+                                                                                        times->size(),
+                                                                                        0,
+                                                                                        0,
+                                                                                        sizeof(double));
 
                         ImPlot::PopStyleColor(2);
                     }
@@ -366,18 +365,18 @@ void LP::PlotView::render_data_format(Telemetry& tel, app_state_t app_state)
 
     // check if there are separators with the same value. This is for letting the user know that the
     // serial data will not be parsed correctly.
-    bool same_str_channel_sep =
+    const bool same_str_channel_sep =
         std::strcmp(tel.frame_format.channel_sep, tel.frame_format.frame_end) == 0 ||
         ((tel.frame_format.named) ? std::strcmp(tel.frame_format.channel_sep, tel.frame_format.name_sep) == 0 : 0);
 
-    bool same_str_frame_end =
+    const bool same_str_frame_end =
         std::strcmp(tel.frame_format.frame_end, tel.frame_format.channel_sep) == 0 ||
         ((tel.frame_format.named) ? std::strcmp(tel.frame_format.frame_end, tel.frame_format.name_sep) == 0 : 0);
 
-    bool same_str_name_sep = (tel.frame_format.named)
-                                 ? std::strcmp(tel.frame_format.name_sep, tel.frame_format.channel_sep) == 0 ||
-                                       std::strcmp(tel.frame_format.name_sep, tel.frame_format.frame_end) == 0
-                                 : 0;
+    const bool same_str_name_sep = (tel.frame_format.named)
+                                       ? std::strcmp(tel.frame_format.name_sep, tel.frame_format.channel_sep) == 0 ||
+                                             std::strcmp(tel.frame_format.name_sep, tel.frame_format.frame_end) == 0
+                                       : false;
 
     if (ImGui::BeginTable("##format_table", 2))
     {
