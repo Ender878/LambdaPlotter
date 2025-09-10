@@ -13,7 +13,7 @@ on:
     branches: [ "master" ]
     paths-ignore:
       - .github/workflows/release.yml
-      - .github/imgs/**
+      - .github/imgs/*.*
       - README.md
 
 jobs:
