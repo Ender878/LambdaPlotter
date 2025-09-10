@@ -27,7 +27,7 @@ namespace LP {
              * @param port // the serial port's file path
              * @param baud // baud rate used for reading from the port
              */
-            static void start_serial_reading(std::string port, size_t baud);
+            static void start_serial_reading(const std::string& port, size_t baud);
 
             /**
              * @brief Wrapper method for saving the plot view to a csv file 

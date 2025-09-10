@@ -1,13 +1,8 @@
 #define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
-
-#include "../bindings/imgui_impl_opengl3.h"
-#include "../fonts/lucide.h"
-#include "../fonts/roboto.h"
-#include "../implot/implot.h"
+#include <LP/icon_data.h>
 #include <LP/serial.h>
-#include <LP/shared.h>
 #include <LP/window.h>
 #include <glad/glad.h>
 #include <imgui.h>
@@ -17,22 +12,26 @@
 #include <string>
 
 #include "../bindings/imgui_impl_glfw.h"
-
-#include <LP/icon_data.h>
+#include "../bindings/imgui_impl_opengl3.h"
+#include "../fonts/lucide.h"
+#include "../fonts/roboto.h"
+#include "../implot/implot.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <stb/stb_image.h>
 
-GLFWwindow  *LP::Window::window       = nullptr;
-ImGuiIO     *LP::Window::io           = nullptr;
-ImGuiStyle  *LP::Window::imgui_style  = nullptr;
-ImPlotStyle *LP::Window::implot_style = nullptr;
+GLFWwindow*  LP::Window::window       = nullptr;
+ImGuiIO*     LP::Window::io           = nullptr;
+ImGuiStyle*  LP::Window::imgui_style  = nullptr;
+ImPlotStyle* LP::Window::implot_style = nullptr;
 int          LP::Window::m_width      = 0;
 int          LP::Window::m_height     = 0;
 
-void LP::Window::init(int t_width, int t_height, const char *title) {
-    if (!glfwInit()) {
+void LP::Window::init(int t_width, int t_height, const char* title)
+{
+    if (!glfwInit())
+    {
         throw std::runtime_error("Failed to initialize GLFW.");
     }
 
@@ -48,20 +47,20 @@ void LP::Window::init(int t_width, int t_height, const char *title) {
     // set opengl version
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
-    const char *glsl_version = "#version 100";
+    const char* glsl_version = "#version 100";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 #elif defined(__APPLE__)
     // GL 3.2 + GLSL 150
-    const char *glsl_version = "#version 150";
+    const char* glsl_version = "#version 150";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
 #else
     // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
+    const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
@@ -71,7 +70,8 @@ void LP::Window::init(int t_width, int t_height, const char *title) {
     // create window
     window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 
-    if (!window) {
+    if (!window)
+    {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
@@ -80,7 +80,8 @@ void LP::Window::init(int t_width, int t_height, const char *title) {
 
     load_icon();
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+    {
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
@@ -107,7 +108,8 @@ void LP::Window::init(int t_width, int t_height, const char *title) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-bool LP::Window::render_mainloop(std::function<void()> content) {
+bool LP::Window::render_mainloop(const std::function<void()>& content)
+{
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     glfwGetWindowSize(window, &m_width, &m_height);
@@ -127,21 +129,24 @@ bool LP::Window::render_mainloop(std::function<void()> content) {
     return !glfwWindowShouldClose(window);
 }
 
-void LP::Window::render_toolbar(std::function<void()> content) {
+void LP::Window::render_toolbar(const std::function<void()>& content)
+{
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2(m_width * 0.25, m_height));
 
     if (ImGui::Begin("MenuBar",
                      nullptr,
-                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |
-                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                         ImGuiWindowFlags_NoTitleBar))
+    {
         content();
 
         ImGui::End();
     }
 }
 
-void LP::Window::destroy() {
+void LP::Window::destroy()
+{
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -151,19 +156,18 @@ void LP::Window::destroy() {
     glfwTerminate();
 }
 
-std::string LP::Window::render_save_fd(const char *default_name) {
+std::string LP::Window::render_save_fd(const char* default_name)
+{
     NFD_Init();
 
-    std::string path_str = "";
+    std::string path_str;
 
-    nfdu8char_t      *out_path       = nullptr;
-    nfdu8filteritem_t filter_item[1] = {
-        {"CSV File", "csv"}
-    };
+    nfdu8char_t* out_path = nullptr;
 
-    nfdresult_t res = NFD_SaveDialogU8(&out_path, filter_item, 1, ".", default_name);
+    constexpr nfdu8filteritem_t filter_item[1] = {{"CSV File", "csv"}};
 
-    if (res == NFD_OKAY) {
+    if (const nfdresult_t res = NFD_SaveDialogU8(&out_path, filter_item, 1, ".", default_name); res == NFD_OKAY)
+    {
         path_str = out_path;
         NFD_FreePath(out_path);
     }
@@ -173,17 +177,22 @@ std::string LP::Window::render_save_fd(const char *default_name) {
     return path_str;
 }
 
-ImVec2 LP::Window::getWindowSize() { return ImVec2(m_width, m_height); }
+ImVec2 LP::Window::getWindowSize()
+{
+    return ImVec2(m_width, m_height);
+}
 
-void LP::Window::loadDefaultFont() {
+void LP::Window::loadDefaultFont()
+{
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;
 
     io->Fonts->AddFontFromMemoryTTF(roboto_ttf, roboto_ttf_len, 18.0f, &config);
 }
 
-void LP::Window::loadIconFont() {
-    static const ImWchar icon_ranges[] = {0xE132, 0xE158, 0};
+void LP::Window::loadIconFont()
+{
+    static constexpr ImWchar icon_ranges[] = {0xE132, 0xE158, 0};
 
     ImFontConfig config;
     config.FontDataOwnedByAtlas = false;
@@ -195,7 +204,8 @@ void LP::Window::loadIconFont() {
     io->Fonts->AddFontFromMemoryTTF(lucide_ttf, lucide_ttf_len, ICON_SIZE, &config);
 }
 
-void LP::Window::setDarkStyle() {
+void LP::Window::setDarkStyle()
+{
     ImGui::StyleColorsDark();
 
     // --- Widgets spacing ---
@@ -230,11 +240,13 @@ void LP::Window::setDarkStyle() {
     implot_style->Colors[ImPlotCol_AxisBgActive]  = ImVec4(0.17f, 0.2f, 0.22f, 1.0f);
 }
 
-void LP::Window::load_icon() {
+void LP::Window::load_icon()
+{
     int            icon_width, icon_height, icon_channels;
-    unsigned char *pixels = stbi_load_from_memory(
-        lpicon_png, lpicon_png_len, &icon_width, &icon_height, &icon_channels, 4);
-    if (pixels) {
+    unsigned char* pixels =
+        stbi_load_from_memory(lpicon_png, lpicon_png_len, &icon_width, &icon_height, &icon_channels, 4);
+    if (pixels)
+    {
         GLFWimage images[1];
         images[0].width  = icon_width;
         images[0].height = icon_height;

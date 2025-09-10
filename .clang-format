@@ -1,14 +1,69 @@
 ---
+# Use one of the predefined styles as a base
 BasedOnStyle: LLVM
+
+# ------------------------------------------------------------------------------
+# General Formatting
+# ------------------------------------------------------------------------------
+
+# Set a column limit for line breaking.
+ColumnLimit: 120
+
+# Indentation width
 IndentWidth: 4
-BinPackArguments: false
-ColumnLimit: 100
-AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortLoopsOnASingleLine: true
-AlignArrayOfStructures: Left
+UseTab: Never
+
+# Align consecutive assignments and declarations
 AlignConsecutiveAssignments: Consecutive
 AlignConsecutiveDeclarations: Consecutive
----
-Language: Cpp
----
-Language: ObjC
+
+# ------------------------------------------------------------------------------
+# Braces and Blocks
+# ------------------------------------------------------------------------------
+
+# Use Allman style ("egyptian brackets").
+BreakBeforeBraces: Allman
+
+# Always add braces to if/for/while statements, even for single lines.
+# This prevents common bugs, e.g., when adding a second line to the block.
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+
+# ------------------------------------------------------------------------------
+# Pointers and References
+# ------------------------------------------------------------------------------
+
+# Align pointers and references to the type (e.g., `int* p` instead of `int *p`).
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# ------------------------------------------------------------------------------
+# Function Calls and Declarations
+# ------------------------------------------------------------------------------
+
+# Don't pack arguments onto one line if they don't fit.
+# Instead, put each argument on its own line for clarity.
+BinPackArguments: false
+BinPackParameters: false
+
+# Align trailing comments.
+AlignTrailingComments: true
+
+# ------------------------------------------------------------------------------
+# Includes
+# ------------------------------------------------------------------------------
+
+# Automatically sort #include directives.
+SortIncludes: true
+
+# Group includes into categories for better organization.
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^<.*'
+    Priority:        1
+    SortPriority:    1
+  - Regex:           '^".*"'
+    Priority:        2
+    SortPriority:    2
+...

@@ -15,13 +15,9 @@ namespace LP {
     typedef struct Channel {
         std::string         name;
         std::vector<double> values;
-        std::vector<double> values_transformed;
 
         double              scale;
-        double              prev_scale = 0.0;
-
         double              offset;
-        double              prev_offset = 0.0;
     } Channel;
 
     // struct containing the frame format attributes
@@ -30,9 +26,9 @@ namespace LP {
         char frame_end[255]   = R"(\n)";
         char name_sep[255]    = ":";
         bool named            = false;
-    } DataFormat;
+    } FrameFormat;
 
-    // Class responsible of all the operations performed on data read from the serial buffers
+    // Class responsible for all the operations performed on data read from the serial buffers
     class Telemetry {
         private:
             mutable std::mutex data_mtx;
@@ -52,7 +48,7 @@ namespace LP {
              */
             static std::string format_special_chars(const char* s);
         public:
-            DataFormat frame_format;
+            FrameFormat frame_format;
 
             /**
              * @brief Construct a new Telemetry object and initialize `start_time`
@@ -83,7 +79,7 @@ namespace LP {
              * @param ch_styles  plot channels style
              * @param ts         time format (DATETIME or ELAPSED) 
              */
-            void dump_data(std::string path, Limits limits, std::unordered_map<int, ChannelStyle> ch_styles, PlotTimeStyle ts = ELAPSED) const;
+            void dump_data(const std::string& path, Limits limits, std::unordered_map<int, ChannelStyle> ch_styles, PlotTimeStyle ts = ELAPSED) const;
 
             /**
              * @brief Get the actual unix time
@@ -95,7 +91,7 @@ namespace LP {
              * @brief Get the elapsed time from `start_time` in millis
              * 
              */
-            int get_elapsed_time();
+            int get_elapsed_time() const;
 
             /**
              * @brief Get the frame fragments
@@ -112,17 +108,17 @@ namespace LP {
             void    set_start_time() { start_time = std::chrono::system_clock::now(); };
             double  get_start_time() const;
 
-            inline std::unordered_map<int, Channel>* get_data()     { return &data; }
-            inline std::vector<double>* get_unix_timestamps()       { return &times_unix; };
-            inline std::vector<double>* get_elapsed_timestamps()    { return &times_elapsed; };
+            std::unordered_map<int, Channel>* get_data()     { return &data; }
+            std::vector<double>* get_unix_timestamps()       { return &times_unix; };
+            std::vector<double>* get_elapsed_timestamps()    { return &times_elapsed; };
 
             static std::string format_datetime(double unix_timestamp);
 
-            std::mutex& get_data_mtx();
+            std::mutex& get_data_mtx() const;
 
             bool is_empty() const;
             void clear_values();
-            void clear();
+            void clear(bool clear_fragments);
     };
 }
 

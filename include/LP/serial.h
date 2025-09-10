@@ -8,8 +8,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
-#include <termios.h>
 #endif
 
 #define DEFAULT_BUF_SIZE 1024
@@ -81,21 +79,21 @@ namespace LP {
              * @brief Close the serial port and unlock it
              * 
              */
-            void close();
+            void close() const;
 
             static std::vector<std::string>& get_serial_ports(bool refresh = false);
             static std::string get_last_open_port();
             static void set_last_open_port(const char* port);
 
-            static inline void set_parity(uint16_t value)    { parity = value; }
-            static inline void set_stop_bits(uint16_t value) { stop_bits = value; }
-            static inline void set_data_bits(uint16_t value) { data_bits = value; }
-            static inline void set_flow_ctrl(uint16_t value) { flow_ctrl = value; }
+            static void set_parity(const uint16_t value)    { parity = value; }
+            static void set_stop_bits(const uint16_t value) { stop_bits = value; }
+            static void set_data_bits(const uint16_t value) { data_bits = value; }
+            static void set_flow_ctrl(const uint16_t value) { flow_ctrl = value; }
 
-            static inline uint16_t get_parity()    { return parity; }
-            static inline uint16_t get_stop_bits() { return stop_bits; }
-            static inline uint16_t get_data_bits() { return data_bits; }
-            static inline uint16_t get_flow_ctrl() { return flow_ctrl; }
+            static uint16_t get_parity()    { return parity; }
+            static uint16_t get_stop_bits() { return stop_bits; }
+            static uint16_t get_data_bits() { return data_bits; }
+            static uint16_t get_flow_ctrl() { return flow_ctrl; }
     };
 }
 

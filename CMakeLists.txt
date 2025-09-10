@@ -31,27 +31,27 @@ FetchContent_Declare(nfd
 )
 FetchContent_MakeAvailable(nfd)
 
-add_library(lplib STATIC
+add_library(lp STATIC
     ${LAMBDAPLOTTER}
     ${IMPLOT}
     ${BINDINGS}
     ${FONTS}
 )
 
-target_include_directories(lplib PUBLIC
+target_include_directories(lp PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(lplib PUBLIC imgui::imgui glfw glad::glad nfd)
+target_link_libraries(lp PUBLIC imgui::imgui glfw glad::glad nfd)
 
 add_executable(lambda_plotter
     src/main.cpp 
 )
 
-target_link_libraries(lambda_plotter PRIVATE lplib)
+target_link_libraries(lambda_plotter PRIVATE lp)
 
 # --- Compiler Flags ---
-target_compile_options(lplib PRIVATE
+target_compile_options(lp PRIVATE
     # Debug flags
     $<$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:GNU,Clang>>:-g>
     
@@ -85,7 +85,7 @@ if(LP_BUILD_TESTS)
     include(GoogleTest)
 
     add_executable(lp_tests tests/telemetry_tests.cpp)
-    target_link_libraries(lp_tests PRIVATE lplib GTest::gtest GTest::gtest_main)
+    target_link_libraries(lp_tests PRIVATE lp GTest::gtest GTest::gtest_main)
 
     gtest_discover_tests(lp_tests)
 endif()

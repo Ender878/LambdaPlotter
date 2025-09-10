@@ -30,7 +30,7 @@ namespace LP {
 
     extern const std::array<plot_functions_t, PLOT_FUNC_SIZE> plot_functions;
 
-    // `PlotView` is the class responsible of the UI components regarding data plotting and it's settings.
+    // `PlotView` is the class responsible for the UI components regarding data plotting and it's settings.
     class PlotView {
         private:
             std::unordered_map<int, ChannelStyle> plot_attributes;
@@ -60,18 +60,18 @@ namespace LP {
              */
             void render_tooltip(const char* message);
         public:
-            PlotView() : combobox_time_index(2) {}
+            PlotView() : plot_style(), combobox_time_index(2) {}
 
-            /**
-             * @brief Render the plot
-             * 
-             * @param tel         Reference to a telemetry object containing all the channel's data
-             * @param app_state   The current app state (READING or IDLE)
-             * @param pos_x       X position for the plot window
-             * @param pos_y       Y position fot the plot window
-             * @param width       
-             * @param height 
-             */
+          /**
+           * @brief Render the plot
+           *
+           * @param tel         Reference to a telemetry object containing all the channel's data
+           * @param app_state   The current app state (READING or IDLE)
+           * @param pos_x       X position for the plot window
+           * @param pos_y       Y position fot the plot window
+           * @param width
+           * @param height
+           */
             void render_plot(Telemetry& tel, app_state_t app_state, int pos_x, int pos_y, int width, int height);
 
             /**

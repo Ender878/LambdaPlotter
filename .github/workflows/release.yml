@@ -6,127 +6,130 @@ on:
       - 'v*.*.*'
 
 jobs:
-    # clang_format:
-    #     name: ClangFormat check
-    #     runs-on: ubuntu-latest
-        
-    #     steps:
-    #     - name: Checkout repository
-    #       uses: actions/checkout@v4
+  clang_format:
+    name: ClangFormat check
+    runs-on: ubuntu-latest
 
-    #     - name: Get clang-format
-    #       run: |
-    #         sudo apt-get update
-    #         sudo apt-get install clang-format-20
-    #     - name: Format code
-    #       run: find src/ tests/ -iname '*.c' -or -iname '*.cpp' -or -iname '*.h' | xargs clang-format -i -style=file
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    #     - name: Check diff
-    #       run: git diff --exit-code
+      - name: Setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
-    build:
-        strategy:
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
+      - name: Install clang-format
+        run: pip install clang-format==20.1.6
 
-        runs-on: ${{ matrix.os }}
+      - name: Format code
+        run: find src/ tests/ -iname '*.c' -or -iname '*.cpp' -or -iname '*.h' | xargs clang-format -i -style=file
 
-        steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
+      - name: Check diff
+        run: git diff --exit-code
 
-        - name: Run apt-get update and install dependencies
-          if: runner.os == 'Linux'
-          run: |
-            sudo apt-get update
-            sudo apt-get install libgtk-3-dev
-        
-        - name: Setup Conan
-          uses: conan-io/setup-conan@v1
-          with:
-            cache_packages: true
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
 
-        - name: Install Conan dependencies (Linux)
-          if: runner.os == 'Linux'
-          run: |
-            CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
-        
-        - name: Install Conan dependencies (macOS)
-          if: runner.os == 'macOS'
-          run: |
-            CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release
+    runs-on: ${{ matrix.os }}
 
-        - name: Install Conan dependencies (Windows)
-          if: runner.os == 'Windows'
-          run: conan install . --build=missing -s build_type=Release
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Build with CMake (Linux/macOS)
-          if: runner.os != 'Windows'
-          run: |
-            cmake --preset conan-release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
-            cmake --build build/Release
+      - name: Run apt-get update and install dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgtk-3-dev
 
-        - name: Build with CMake (Windows)
-          if: runner.os == 'Windows'
-          run: |
-            cmake --preset conan-default -DCMAKE_BUILD_TYPE=Release
-            cmake --build build --config Release
+      - name: Setup Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          cache_packages: true
 
-        - name: Run tests (Linux/macOS)
-          if: runner.os != 'Windows'
-          working-directory: ./build/Release
-          run: ctest -C Release --output-on-failure
+      - name: Install Conan dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True
 
-        - name: Run tests (Windows)
-          if: runner.os == 'Windows'
-          working-directory: ./build
-          run: ctest -C Release --output-on-failure
+      - name: Install Conan dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          CC=clang CXX=clang++ conan install . --build=missing -s build_type=Release
 
-        - name: Prepare package (Linux)
-          if: runner.os == 'Linux'
-          run: |
-            mkdir -p release
-            cp build/Release/lambda_plotter README.md LICENSE release/
-            tar -czvf lambda_plotter-${{ runner.os }}.tar.gz -C release .
+      - name: Install Conan dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: conan install . --build=missing -s build_type=Release
 
-        - name: Prepare package (MacOS)
-          if: runner.os == 'macOS'
-          run: |
-            zip -r lambda_plotter-${{ runner.os }}.zip build/Release/lambda_plotter.app README.md LICENSE
+      - name: Build with CMake (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cmake --preset conan-release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/Release
 
-        - name: Prepare package (Windows)
-          if: runner.os == 'Windows'
-          run: |
-            mkdir release
-            copy build\Release\lambda_plotter.exe release\
-            copy README.md release\
-            copy LICENSE release\
-            Compress-Archive -Path release\* -DestinationPath lambda_plotter-${{ runner.os }}.zip
-        
-        - name: Upload Artifacts
-          uses: actions/upload-artifact@v4
-          with:
-            name: release-asset-${{ runner.os }}
-            path: |
-              lambda_plotter-*.tar.gz
-              lambda_plotter-*.zip
-        
-    create_release:
-        name: Create Release
-        needs: build
-        runs-on: ubuntu-latest
-        permissions: 
-          contents: write
+      - name: Build with CMake (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cmake --preset conan-default -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
 
-        steps:
-          - name: Download release assests
-            uses: actions/download-artifact@v4
-            with:
-              path: release-assets
-        
-          - name: Create Release and Upload Assets
-            uses: softprops/action-gh-release@v2
-            with:
-              files: release-assets/*/*
-              generate_release_notes: true
+      - name: Run tests (Linux/macOS)
+        if: runner.os != 'Windows'
+        working-directory: ./build/Release
+        run: ctest -C Release --output-on-failure
 
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        working-directory: ./build
+        run: ctest -C Release --output-on-failure
+
+      - name: Prepare package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p release
+          cp build/Release/lambda_plotter README.md LICENSE release/
+          tar -czvf lambda_plotter-${{ runner.os }}.tar.gz -C release .
+
+      - name: Prepare package (MacOS)
+        if: runner.os == 'macOS'
+        run: |
+          zip -r lambda_plotter-${{ runner.os }}.zip build/Release/lambda_plotter.app README.md LICENSE
+
+      - name: Prepare package (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir release
+          copy build\Release\lambda_plotter.exe release\
+          copy README.md release\
+          copy LICENSE release\
+          Compress-Archive -Path release\* -DestinationPath lambda_plotter-${{ runner.os }}.zip
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-asset-${{ runner.os }}
+          path: |
+            lambda_plotter-*.tar.gz
+            lambda_plotter-*.zip
+
+  create_release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release assests
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*/*
+          generate_release_notes: true

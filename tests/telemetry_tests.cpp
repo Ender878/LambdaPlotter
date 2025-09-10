@@ -1,16 +1,19 @@
-#include "LP/telemetry.h"
 #include <cstring>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
 
-class TelemetryTest : public ::testing::Test {
+#include "LP/telemetry.h"
+
+class TelemetryTest : public ::testing::Test
+{
   protected:
     LP::Telemetry tel;
 };
 
 // === SERIAL BUFFER PARSING ===
-TEST_F(TelemetryTest, SerialParsing_Correct) {
+TEST_F(TelemetryTest, SerialParsing_Correct)
+{
     std::vector<char> buffer = {'6', ' ', '9', '\n', '1', '2'};
 
     std::string frame_stream = tel.parse_serial(buffer);
@@ -19,7 +22,8 @@ TEST_F(TelemetryTest, SerialParsing_Correct) {
     EXPECT_EQ(tel.get_frame_fragments(), "12");
 }
 
-TEST_F(TelemetryTest, SerialParsing_Empty) {
+TEST_F(TelemetryTest, SerialParsing_Empty)
+{
     // missing frame end chars
     std::vector<char> buffer = {'6', ' ', '9'};
 
@@ -30,7 +34,8 @@ TEST_F(TelemetryTest, SerialParsing_Empty) {
 }
 
 // === FRAME PARSING ===
-TEST_F(TelemetryTest, ParseFrame_Unnamed) {
+TEST_F(TelemetryTest, ParseFrame_Unnamed)
+{
     std::vector<double> expected_ch1 = {15, 14, 4};
     std::vector<double> expected_ch2 = {12, 5, 3};
     std::vector<double> expected_ch3 = {3, 2, 0};
@@ -46,7 +51,8 @@ TEST_F(TelemetryTest, ParseFrame_Unnamed) {
     EXPECT_EQ(data[3].values, expected_ch3);
 }
 
-TEST_F(TelemetryTest, ParseFrame_Named) {
+TEST_F(TelemetryTest, ParseFrame_Named)
+{
     std::vector<double> expected_ch1 = {15, 14, 4};
     std::vector<double> expected_ch2 = {12, 5, 3};
     std::vector<double> expected_ch3 = {3, 2, 0};

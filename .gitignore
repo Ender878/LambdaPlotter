@@ -1,5 +1,7 @@
 build
 .cache
-*.json
+.venv
 .vscode
+.idea
 /include/nfd/
+*.json

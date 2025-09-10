@@ -43,14 +43,14 @@ namespace LP {
              * @return true   if the app should run
              * @return false  if the app should close
              */
-            static bool render_mainloop(std::function<void()> content);
+            static bool render_mainloop(const std::function<void()> &content);
 
             /**
              * @brief Render the application's toolbar
              * 
              * @param content lamba containing the toolbar content
              */
-            static void render_toolbar(std::function<void()> content);
+            static void render_toolbar(const std::function<void()> &content);
 
             /**
              * @brief Render the Save file dialog
