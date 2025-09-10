@@ -121,8 +121,6 @@ cmake --preset conan-debug
 cmake --build --preset conan-debug
 ```
 
-> [!NOTE]
->
 > On Windows MSVC builds, you may need to specify `conan-default` as the preset for release builds. On Linux/macOS it is recommended to specify the compilers: `-DCMAKE_C_COMPILER=<CC> -DCMAKE_CXX_COMPILER=<CXX>`
 
 The final executable will be located in the `build/Release` or `build/Debug` directory.
