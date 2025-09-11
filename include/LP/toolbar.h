@@ -2,7 +2,6 @@
 #define __TOOLBAR_H__
 
 #include "LP/shared.h"
-#include <cstddef>
 #include <optional>
 #include <string>
 #include <vector>
