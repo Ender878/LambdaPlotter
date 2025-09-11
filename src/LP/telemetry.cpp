@@ -252,9 +252,10 @@ void LP::Telemetry::dump_data(const std::string&                    path,
             if (data_i < channel.values.size())
             {
 
-                if (double val = channel.values.at(data_i); val >= limits.y_min && val <= limits.y_max)
+                if (double val = channel.values.at(data_i) * channel.scale + channel.offset;
+                    val >= limits.y_min && val <= limits.y_max)
                 {
-                    val_str = std::to_string(val * channel.scale + channel.offset);
+                    val_str = std::to_string(val);
 
                     std::ranges::replace(val_str, '.', ',');
                 }

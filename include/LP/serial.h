@@ -1,7 +1,6 @@
 #ifndef __SERIAL_H__
 #define __SERIAL_H__
 
-#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>

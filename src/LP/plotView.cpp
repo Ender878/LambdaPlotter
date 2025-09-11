@@ -1,7 +1,6 @@
 #include <LP/plotView.h>
 #include <LP/telemetry.h>
 #include <array>
-#include <cstddef>
 #include <cstring>
 #include <format>
 #include <imgui.h>

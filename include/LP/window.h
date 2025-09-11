@@ -2,7 +2,6 @@
 #define __APP_H__
 
 #include <LP/telemetry.h>
-#include <LP/toolbar.h>
 #include <functional>
 #include <imgui.h>
 #include <string>
