@@ -78,6 +78,8 @@ void LP::PlotView::render_plot(
                         std::string label = std::format("{}##{}", channel.name, ch_id);
 
                         ImPlot::PushStyleColor(ImPlotCol_Line, plot_attributes[ch_id].color);
+                        ImPlot::PushStyleColor(ImPlotCol_MarkerOutline, plot_attributes[ch_id].color);
+                        ImPlot::PushStyleColor(ImPlotCol_MarkerFill, plot_attributes[ch_id].color);
                         ImPlot::PushStyleColor(ImPlotCol_Fill, plot_attributes[ch_id].color);
 
                         std::vector<double> values_transformed;
@@ -95,8 +97,7 @@ void LP::PlotView::render_plot(
                                                                                         0,
                                                                                         0,
                                                                                         sizeof(double));
-
-                        ImPlot::PopStyleColor(2);
+                        ImPlot::PopStyleColor(4);
                     }
                 }
 
