@@ -44,7 +44,7 @@ The easiest way to use **LambdaPlotter** is to download the latest pre-built rel
 3. **Configure the Serial Port:** Select the correct **Port** and set the **Baud Rate** to match your device.
 4. **Define the Data Format:** This is the most important step. You must tell LambdaPlotter how your data is structured.
     - **Frame End:** The character(s) that mark the end of a complete data packet (e.g., `\n` for a newline).
-    - **Channel Separator:** The character that separates different data values (e.g., `,` or ` `).
+    - **Channel Separator:** The character that separates different channels (e.g., `,` or ` `).
     - **Named Channels:** Check this if your data includes names for each value.
       - **Name Separator:** The character(s) that separates names from values (e.g., `:`)
 5. **Click the 'Play' button** to begin plotting!
