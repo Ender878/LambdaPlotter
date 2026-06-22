@@ -6,5 +6,5 @@ add_compile_definitions(
     GLFW_INCLUDE_NONE
 )
 
-target_link_libraries(lambda_plotter imgui)
+target_link_libraries(lambda_plotter core)
 target_include_directories(lambda_plotter PRIVATE .)
