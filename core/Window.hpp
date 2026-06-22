@@ -3,12 +3,13 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <cstdint>
+#include <string>
 
 namespace Core {
     typedef struct win_specs {
-        const char* title;
-        uint16_t    width;
-        uint16_t    height;
+        std::string title;
+        uint16_t    width  = 0;
+        uint16_t    height = 0;
     } win_specs;
 
     class Window {
@@ -16,7 +17,7 @@ namespace Core {
             win_specs   m_specs;
             GLFWwindow* m_handle;
         public:
-            explicit Window(win_specs specs = win_specs()) : m_handle(nullptr), m_specs(specs) {}
+            explicit Window(const win_specs& specs = win_specs());
             ~Window();
 
             void create();

@@ -1,9 +1,10 @@
-#include "window.hpp"
+#include "Window.hpp"
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 #include <stdexcept>
 
 namespace Core {
+    Window::Window(const win_specs &specs) : m_specs(specs), m_handle(nullptr) {}
 
     Window::~Window() {
         destroy();
@@ -31,7 +32,7 @@ namespace Core {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     #endif
 
-        m_handle = glfwCreateWindow(m_specs.width, m_specs.height, m_specs.title, nullptr, nullptr);
+        m_handle = glfwCreateWindow(m_specs.width, m_specs.height, m_specs.title.c_str(), nullptr, nullptr);
         if (!m_handle) {
             glfwTerminate();
             throw std::runtime_error("[ERROR]: Could not create GLFW window.");
