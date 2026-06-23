@@ -10,7 +10,7 @@
 
 namespace Core {
     typedef struct app_specs {
-        std::string name    = "Application";
+        std::string name     = "Application";
         win_specs   w_specs  = win_specs();
     } app_specs;
 
@@ -21,8 +21,8 @@ namespace Core {
             std::vector<std::unique_ptr<ILayer>> m_layers;
             bool m_running;
 
-            ImGuiIO    im_io;
-            ImGuiStyle im_style;
+            ImGuiIO*    im_io;
+            ImGuiStyle* im_style;
         public:
             explicit Application(const app_specs &specs = app_specs());
             ~Application();
@@ -34,11 +34,13 @@ namespace Core {
             
             template <typename Layer>
             requires std::is_base_of_v<ILayer, Layer>
-            void push_layer(Layer l) {
-                m_layers.push_back(std::make_unique(l));
+            void push_layer() {
+                m_layers.push_back(std::make_unique<Layer>());
             }
 
             [[nodiscard]] static float get_time();
+
+            [[nodiscard]] static Application& get();
     };
 }
 

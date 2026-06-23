@@ -1,6 +1,7 @@
 #include <exception>
 #include <print>
 #include "Application.hpp"
+#include "ui/Toolbar.hpp"
 
 int main() {
     Core::app_specs specs;
@@ -10,6 +11,7 @@ int main() {
 
     try {
         Core::Application app(specs);
+        app.push_layer<LP::Toolbar>();
         app.run();
     } catch (const std::exception &e) {
         std::println(stderr, "%s", e.what());

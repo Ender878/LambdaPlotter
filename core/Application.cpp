@@ -1,5 +1,6 @@
 #include "Application.hpp"
 #include <GLFW/glfw3.h>
+#include <glad/gl.h>
 #include <glm/common.hpp>
 #include <memory>
 #include <stdexcept>
@@ -8,6 +9,7 @@
 #include "imgui_impl_opengl3.h"
 
 namespace Core {
+    static Application *s_app = nullptr;
 
     Application::Application(const app_specs &specs)
      : m_specs(specs), m_running(false) 
@@ -25,11 +27,15 @@ namespace Core {
         
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        im_io    = ImGui::GetIO();
-        im_style = ImGui::GetStyle();
+        im_io    = &ImGui::GetIO(); (void)im_io;
+        im_style = &ImGui::GetStyle();
+
+        im_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         ImGui_ImplGlfw_InitForOpenGL(m_window->get_handle(), true);
         ImGui_ImplOpenGL3_Init();
+
+        s_app = this;
     }
 
     void Application::run() {
@@ -38,6 +44,15 @@ namespace Core {
         float last_time = get_time();
         
         while (m_running) {
+            auto frame_buf_size = m_window->get_frame_buf_size();
+            glViewport(0, 0, frame_buf_size.x, frame_buf_size.y);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            ImGui::DockSpaceOverViewport();
+
             if (m_window->should_close()) {
                 stop();
                 break;
@@ -53,6 +68,16 @@ namespace Core {
             for (const auto& layer : m_layers)
                 layer->on_render();
 
+            if (im_io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+                GLFWwindow* backup_current_context = glfwGetCurrentContext();
+                ImGui::UpdatePlatformWindows();
+                ImGui::RenderPlatformWindowsDefault();
+                glfwMakeContextCurrent(backup_current_context);
+            }
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
             m_window->update();
         }
     }
@@ -62,6 +87,10 @@ namespace Core {
     }
 
     Application::~Application() {
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+
         m_window->destroy();
         glfwTerminate();
     }
@@ -72,5 +101,9 @@ namespace Core {
 
     float Application::get_time() {
         return static_cast<float>(glfwGetTime());
+    }
+
+    Application& Application::get() {
+        return *s_app;
     }
 }
