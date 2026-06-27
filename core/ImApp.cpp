@@ -1,4 +1,4 @@
-#include "Application.hpp"
+#include "ImApp.hpp"
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 #include <glm/common.hpp>
@@ -9,10 +9,8 @@
 #include "imgui_impl_opengl3.h"
 
 namespace Core {
-    static Application *s_app = nullptr;
-
-    Application::Application(const app_specs &specs)
-     : m_specs(specs), m_running(false) 
+    ImApp::ImApp(app_specs specs)
+     : m_specs(std::move(specs)), m_running(false) 
     {
         if (!glfwInit()) {
             throw std::runtime_error("[ERROR]: Could not initialize GLFW");
@@ -30,19 +28,17 @@ namespace Core {
         im_io    = &ImGui::GetIO(); (void)im_io;
         im_style = &ImGui::GetStyle();
 
-        im_io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+        im_io->ConfigFlags = this->m_specs.config_flags;
 
         ImGui_ImplGlfw_InitForOpenGL(m_window->get_handle(), true);
         ImGui_ImplOpenGL3_Init();
-
-        s_app = this;
     }
 
-    void Application::run() {
+    void ImApp::run() {
         m_running = true;
 
         float last_time = get_time();
-        
+
         while (m_running) {
             auto frame_buf_size = m_window->get_frame_buf_size();
             glViewport(0, 0, frame_buf_size.x, frame_buf_size.y);
@@ -82,11 +78,11 @@ namespace Core {
         }
     }
     
-    void Application::stop() {
+    void ImApp::stop() {
         m_running = false;
     }
 
-    Application::~Application() {
+    ImApp::~ImApp() {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
@@ -95,15 +91,19 @@ namespace Core {
         glfwTerminate();
     }
 
-    std::shared_ptr<Window> Application::get_window() {
+    std::shared_ptr<Window> ImApp::get_window() {
         return m_window;
     }
 
-    float Application::get_time() {
-        return static_cast<float>(glfwGetTime());
+    ImGuiIO* ImApp::get_im_io() {
+        return im_io;
     }
 
-    Application& Application::get() {
-        return *s_app;
+    ImGuiStyle* ImApp::get_im_style() {
+        return im_style;
+    }
+
+    float ImApp::get_time() {
+        return static_cast<float>(glfwGetTime());
     }
 }

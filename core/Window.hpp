@@ -17,7 +17,7 @@ namespace Core {
             win_specs   m_specs;
             GLFWwindow* m_handle;
         public:
-            explicit Window(const win_specs& specs = win_specs());
+            explicit Window(win_specs specs = win_specs());
             ~Window();
 
             void create();

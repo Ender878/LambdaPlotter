@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace Core {
-    Window::Window(const win_specs &specs) : m_specs(specs), m_handle(nullptr) {}
+    Window::Window(win_specs specs) : m_specs(std::move(specs)), m_handle(nullptr) {}
 
     Window::~Window() {
         destroy();

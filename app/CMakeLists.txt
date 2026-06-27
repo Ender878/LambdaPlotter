@@ -1,4 +1,4 @@
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "*")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "*.cpp")
 
 add_executable(lambda_plotter ${SOURCES})
 

@@ -10,11 +10,12 @@
 
 namespace Core {
     typedef struct app_specs {
-        std::string name     = "Application";
-        win_specs   w_specs  = win_specs();
+        std::string      name         = "ImApp";
+        win_specs        w_specs      = win_specs();
+        ImGuiConfigFlags config_flags = 0;
     } app_specs;
 
-    class Application {
+    class ImApp {
         private:
             app_specs m_specs;
             std::shared_ptr<Window> m_window;
@@ -24,8 +25,8 @@ namespace Core {
             ImGuiIO*    im_io;
             ImGuiStyle* im_style;
         public:
-            explicit Application(const app_specs &specs = app_specs());
-            ~Application();
+            explicit ImApp(app_specs specs = app_specs());
+            ~ImApp();
 
             void run();
             void stop();
@@ -38,9 +39,9 @@ namespace Core {
                 m_layers.push_back(std::make_unique<Layer>());
             }
 
-            [[nodiscard]] static float get_time();
+            ImGuiIO*    get_im_io();
+            ImGuiStyle* get_im_style();
 
-            [[nodiscard]] static Application& get();
+            [[nodiscard]] static float get_time();
     };
 }
-
